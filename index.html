@@ -234,6 +234,21 @@
                 inset 0 0 32px var(--arch-glow, rgba(56, 189, 248, 0.38));
         }
 
+        /* 宇宙選擇頁面全息卡片 */
+        .portal-card {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(155deg, rgba(15, 23, 42, 0.88) 0%, rgba(9, 13, 26, 0.96) 100%);
+            border: 1.5px solid var(--portal-border, rgba(56, 189, 248, 0.4));
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), inset 0 0 20px var(--portal-soft, rgba(56, 189, 248, 0.1));
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .portal-card:hover {
+            transform: translateY(-6px) scale(1.015);
+            border-color: var(--portal-color, #38bdf8);
+            box-shadow: 0 14px 36px var(--portal-glow, rgba(56, 189, 248, 0.35)), inset 0 0 28px var(--portal-soft, rgba(56, 189, 248, 0.2));
+        }
+
         /* 手寫感霓虹發光字體效果 */
         .neon-script-title {
             text-shadow:
@@ -318,10 +333,10 @@
                 <i class="fa-solid fa-book-bookmark text-amber-300"></i>
                 <span>圖鑑(<span id="home-codex-count">0/21</span>)</span>
             </button>
-            <button id="btn-instant-text" onclick="GameApp.toggleInstantText()" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            <button id="btn-instant-text" onclick="GameApp.toggleInstantText()" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5" title="切換逐字顯示／立即顯示">
                 <i class="fa-solid fa-forward-fast text-emerald-400" id="icon-instant"></i>
             </button>
-            <button id="btn-mute" onclick="SoundFX.toggleMute()" class="glass-panel w-9 h-9 rounded-full flex items-center justify-center text-slate-200 hover:text-white transition">
+            <button id="btn-mute" onclick="SoundFX.toggleMute()" class="glass-panel w-9 h-9 rounded-full flex items-center justify-center text-slate-200 hover:text-white transition" title="靜音開關">
                 <i id="icon-mute" class="fa-solid fa-volume-high text-indigo-300"></i>
             </button>
         </div>
@@ -376,9 +391,13 @@
                         </svg>
                     </div>
 
-                    <!-- 「✦ 選擇你的宇宙 ✦」按鈕 -->
-                    <div class="flex items-center gap-2.5 pointer-events-auto">
-                        <button onclick="GameApp.showScreen('hub')" class="px-8 py-3 rounded-full bg-slate-900/95 hover:bg-indigo-950 text-white font-black text-lg sm:text-xl tracking-widest border-2 border-amber-200/80 shadow-[0_0_25px_rgba(56,189,248,0.8),0_0_45px_rgba(251,191,36,0.4)] hover:scale-105 transition flex items-center gap-3">
+                    <!-- 「✦ 選擇你的宇宙 ✦」按鈕与快速開始 -->
+                    <div class="flex flex-wrap items-center justify-center gap-2.5 pointer-events-auto">
+                        <button onclick="GameApp.startQuickPlay()" class="neon-primary-btn px-6 py-3 rounded-full text-white font-black text-base sm:text-lg tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-play text-xs"></i>
+                            <span>開始遊戲</span>
+                        </button>
+                        <button onclick="GameApp.showScreen('hub')" class="px-7 py-3 rounded-full bg-slate-900/95 hover:bg-indigo-950 text-white font-black text-base sm:text-lg tracking-widest border-2 border-amber-200/80 shadow-[0_0_25px_rgba(56,189,248,0.8),0_0_45px_rgba(251,191,36,0.4)] hover:scale-105 transition flex items-center gap-2.5">
                             <span class="text-cyan-300 text-sm">✦</span>
                             <span>選擇你的宇宙</span>
                             <span class="text-cyan-300 text-sm">✦</span>
@@ -438,6 +457,12 @@
                 <div id="scene-location-pill" class="absolute top-1 left-1 sm:left-4 glass-panel px-3.5 py-1.5 rounded-xl text-xs text-slate-200 flex items-center gap-2 shadow-md">
                     <i class="fa-regular fa-clock text-sky-400"></i>
                     <span id="scene-location-text">晚上 22:45｜小明的房間</span>
+                </div>
+
+                <!-- 關係狀態提示膠囊 -->
+                <div id="relationship-status-pill" class="hidden absolute top-1 right-1 sm:right-4 glass-panel px-3.5 py-1.5 rounded-xl text-xs text-emerald-300 border border-emerald-400/30 items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-Wave-square"></i>
+                    <span id="relationship-status-text"></span>
                 </div>
 
                 <div class="w-full max-w-xl flex items-end justify-center gap-2 sm:gap-8 h-full pt-8">
@@ -623,7 +648,7 @@
                 <p>在《Friend.exe：小明的網路宇宙》中，你將扮演準備教師資格考的 23 歲師培生小明。透過七個獨立的平行宇宙，體驗不同的網路交友情境。</p>
                 <ul class="list-disc list-inside space-y-1.5 text-slate-300">
                     <li><strong class="text-white">無標準答案：</strong>每個選擇都有其背後的需求與後果。</li>
-                    <li><strong class="text-white">雙重階段分支：</strong>第一次選擇影響劇情與突發事件，第二次選擇決定最終結局。</li>
+                    <li><strong class="text-white">雙重階段分支：</strong>第一次選擇影響劇情與突發事件，第二次選擇決定最終結局與對應分支描述。</li>
                 </ul>
             </div>
             <button onclick="GameApp.hideModal('guide')" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition">
@@ -806,42 +831,66 @@
             }
         };
 
+        // ==================== 七個宇宙完整劇本資料庫（100% 完整還原原始劇本所有對話、旁白、分支與結局） ====================
         const UNIVERSES_DATA = [
+            // -------------------- 宇宙 01 --------------------
             {
                 id: 'u1', code: '宇宙 01', title: '最後一場排位賽', platform: 'Discord／線上遊戲', themeTag: '共同興趣與信任',
                 colorFrom: '#312e81', colorVia: '#1e1b4b', colorTo: '#090d16', accentColor: '#818cf8',
                 partnerId: 'nightwolf', partnerName: '阿哲 (NightWolf)', partnerAvatar: 'NW',
-                scene1Meta: '晚上 22:45｜小明的房間',
+                scene1Meta: '晚上 22:45｜小明的房間（遊戲音效、Discord 通知聲）',
                 scene1Steps: [
-                    { type: 'narration', text: '又是被教案折磨的一天。小明決定打兩場遊戲放鬆一下。' },
-                    { type: 'chat', sender: 'NightWolf', time: '22:48', text: '欸,你剛剛那波操作超神欸哈哈哈！要不要加 Discord？' },
-                    { type: 'monologue', text: '「好久沒遇到這麼聊得來的人了……」' }
+                    { type: 'narration', text: '又是被教案折磨的一天。' },
+                    { type: 'narration', text: '小明決定打兩場遊戲放鬆一下。沒想到今天的隊友意外地有默契，連續贏下三場比賽。' },
+                    { type: 'narration', text: '遊戲結束後，一則好友邀請跳了出來。' },
+                    { type: 'chat', sender: 'NightWolf', time: '22:48', text: '欸，你剛剛那波操作超神欸哈哈哈！' },
+                    { type: 'chat', sender: 'NightWolf', time: '22:48', text: '感覺我們很有默契，要不要加 Discord？下次一起排！' },
+                    { type: 'monologue', text: '「好久沒遇到這麼聊得來的人了。可是我們才認識一個晚上……」' }
                 ],
                 choice1Prompt: '第一次選擇：你會如何回應邀請？',
                 choice1Options: {
                     A: {
-                        label: 'A｜直接加入對方的 Discord 私人群組', replyText: '好啊！反正大家都是打遊戲的朋友。',
+                        label: 'A｜直接加入對方的 Discord 私人群組',
+                        replyText: '好啊！反正大家都是打遊戲的朋友。',
+                        statusText: '狀態：親近感提升，接觸陌生人的範圍擴大。',
                         consequenceSteps: [
                             { type: 'chat', sender: '小明', isSelf: true, time: '22:49', text: '好啊！反正大家都是打遊戲的朋友。' },
-                            { type: 'narration', text: '你加入了名為「深夜不睡覺俱樂部」的私人群組。' }
+                            { type: 'narration', text: '你加入了名為「深夜不睡覺俱樂部」的私人群組。' },
+                            { type: 'narration', text: '群組裡有八個人，大家熱情地歡迎你，還幫你取了新綽號「教案戰神」。' },
+                            { type: 'chat', sender: '阿哲 (NightWolf)', time: '22:55', text: '你以後就是我們固定團的成員啦！' },
+                            { type: 'narration', text: '你感覺自己突然有了歸屬感。' },
+                            { type: 'narration', text: '但你也發現，群組裡有人習慣公開分享其他成員的個人資料和生活照片。' },
+                            { type: 'narration', text: '【狀態：親近感提升，接觸陌生人的範圍擴大。】' }
                         ]
                     },
                     B: {
-                        label: 'B｜先保留在遊戲內聯絡', replyText: '可以先在遊戲裡加好友啊。',
+                        label: 'B｜先保留在遊戲內聯絡',
+                        replyText: '可以先在遊戲裡加好友啊，熟一點再加 Discord。',
+                        statusText: '狀態：互動穩定，私人資訊揭露較少。',
                         consequenceSteps: [
-                            { type: 'chat', sender: '小明', isSelf: true, time: '22:49', text: '可以先在遊戲裡加好友啊。' },
-                            { type: 'narration', text: '接下來一週，你們一起打了好幾場遊戲。' }
+                            { type: 'chat', sender: '小明', isSelf: true, time: '22:49', text: '可以先在遊戲裡加好友啊，熟一點再加 Discord。' },
+                            { type: 'chat', sender: '阿哲 (NightWolf)', time: '22:50', text: '沒問題啊！反正我們常常在線。' },
+                            { type: 'narration', text: '接下來一週，你們一起打了好幾場遊戲。' },
+                            { type: 'narration', text: '你開始了解他的遊戲習慣，也發現他輸掉比賽時會主動安慰隊友。' },
+                            { type: 'narration', text: '但除了遊戲，你們對彼此的生活幾乎一無所知。' },
+                            { type: 'narration', text: '【狀態：互動穩定，私人資訊揭露較少。】' }
                         ]
                     },
                     C: {
-                        label: 'C｜婉拒邀請，保持一次性的遊戲關係', replyText: '謝啦！不過我比較習慣自己玩。',
+                        label: 'C｜婉拒邀請，保持一次性的遊戲關係',
+                        replyText: '謝啦！不過我比較習慣自己玩。',
+                        statusText: '狀態：維持原有社交界線，暫時沒有進一步建立連結。',
                         consequenceSteps: [
                             { type: 'chat', sender: '小明', isSelf: true, time: '22:49', text: '謝啦！不過我比較習慣自己玩。' },
-                            { type: 'narration', text: '你關掉遊戲，重新打開教檢考古題。' }
+                            { type: 'chat', sender: '阿哲 (NightWolf)', time: '22:50', text: '哈哈好啊，有緣再一起玩！' },
+                            { type: 'narration', text: '你關掉遊戲，重新打開教檢考古題。' },
+                            { type: 'narration', text: '你沒有遇到任何麻煩，卻也有一點失落。' },
+                            { type: 'monologue', text: '「我是不是太快拒絕了一段可能的友誼？」' },
+                            { type: 'narration', text: '【狀態：維持原有社交界線，暫時沒有進一步建立連結。】' }
                         ]
                     }
                 },
-                scene2Meta: '一週後｜突發事件：交換真實身分',
+                scene2Meta: '第一次互動的一週後｜突發事件：交換真實身分',
                 scene2Title: '突發事件——交換真實身分',
                 scene2BranchIntro: {
                     A: { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:10', text: '我們都把你當自己人了，大家想知道你本人長怎樣！' },
@@ -849,166 +898,763 @@
                     C: { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:10', text: '欸又是你！這次要不要交換聯絡方式？' }
                 },
                 scene2CommonSteps: [
-                    { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:12', text: '我都給你看照片了，你也傳一張嘛！順便說一下你在哪間學校。' },
-                    { type: 'nova', text: '分享照片與學校資訊可能使他人更容易辨識你的身分。' }
+                    { type: 'narration', text: '阿哲傳來一張自己的生活照，接著問：' },
+                    { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:12', text: '我都給你看照片了，你也傳一張嘛！' },
+                    { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:12', text: '順便說一下你在哪間學校，搞不好我們住很近欸。' },
+                    { type: 'nova', text: '分享照片、學校與生活資訊，可能使他人更容易辨識你的身分。你可以自行決定揭露程度。' }
                 ],
                 choice2Prompt: '第二次選擇：面對阿哲詢問照片與學校，你會怎麼做？',
                 choice2Options: {
                     A: {
-                        label: 'A｜分享生活照片和學校資訊', endingCode: '01-A', endingName: '結局 01-A：快速拉近的距離',
-                        steps: () => [{ type: 'narration', text: '你分享了照片與學校，話題更加熱絡，但也意識到隱私擴散的風險。' }],
+                        label: 'A｜分享生活照片和學校資訊',
+                        replyText: '好啊，我在這裡讀書，這張是上週拍的。',
+                        endingCode: '01-A', endingName: '結局 01-A：快速拉近的距離',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '23:14', text: '好啊，我在這裡讀書，這張是上週拍的。' },
+                            { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:15', text: '真假！我們離超近欸！' },
+                            { type: 'narration', text: '兩人的話題從遊戲延伸到學校、美食與生活。小明感受到久違的友誼。' },
+                            c1 === 'A'
+                                ? { type: 'narration', text: '幾天後，「深夜不睡覺俱樂部」群組裡有人轉貼他的照片，開玩笑說要去學校找他。因為群組裡有許多不熟的成員，照片很快被更多人看到。' }
+                                : { type: 'narration', text: '幾天後，你的照片先在私人對話中流傳，阿哲跟朋友提起你讀的學校，開玩笑說要去學校找你。風險取決於對方如何處理你的私人資訊。' },
+                            { type: 'narration', text: '雖然大家可能沒有惡意，小明卻突然意識到，自己無法控制資訊被轉傳到哪裡。' },
+                            { type: 'monologue', text: '「原來我願意相信一個人，不代表我也願意讓所有人知道我的生活。」' }
+                        ],
                         finalMonologue: '「原來我願意相信一個人，不代表我也願意讓所有人知道我的生活。」'
                     },
                     B: {
-                        label: 'B｜保持聯繫，但不分享可辨識的個資', endingCode: '01-B', endingName: '結局 01-B：慢慢建立的友誼',
-                        steps: () => [{ type: 'narration', text: '你守住了隱私界線，並透過長時間互動建立起真誠信任。' }],
+                        label: 'B｜保持聯繫，但不分享可辨識的個資',
+                        replyText: '照片我先不傳啦！不過我們可以繼續一起玩，有機會再慢慢認識。',
+                        endingCode: '01-B', endingName: '結局 01-B：慢慢建立的友誼',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '23:14', text: '照片我先不傳啦！不過我們可以繼續一起玩，有機會再慢慢認識。' },
+                            { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:15', text: '哈哈可以啦，我只是好奇而已。' },
+                            { type: 'narration', text: '你們仍然一起打遊戲，偶爾聊聊生活。' },
+                            c1 === 'A'
+                                ? { type: 'narration', text: '即使在熱鬧的 Discord 群組裡，大家也知道了你有自己的原則，不再隨意起鬨要你的照片。' }
+                                : { type: 'narration', text: '你們維持著舒服的一對一排位默契，沒有因為拒絕傳照而產生隔閡。' },
+                            { type: 'narration', text: '一個月後，你發現阿哲會在你忙碌時體諒你，也會尊重你不想回答的問題。' },
+                            { type: 'narration', text: '你開始相信，友誼可以不必靠快速揭露隱私來證明。' },
+                            { type: 'monologue', text: '「或許真正讓我信任他的，不是我們交換了多少資料，而是他如何尊重我的選擇。」' }
+                        ],
                         finalMonologue: '「或許真正讓我信任他的，不是我們交換了多少資料，而是他如何尊重我的選擇。」'
                     },
                     C: {
-                        label: 'C｜質疑對方的要求，暫停互動', endingCode: '01-C', endingName: '結局 01-C：被保留下來的界線',
-                        steps: () => [{ type: 'narration', text: '你明確表達不舒服，並學會守護自己的社交界線。' }],
+                        label: 'C｜質疑對方的要求，暫停互動',
+                        replyText: '為什麼一定要知道我在哪裡讀書？我不太舒服。',
+                        endingCode: '01-C', endingName: '結局 01-C：被保留下來的界線',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '23:14', text: '為什麼一定要知道我在哪裡讀書？我不太舒服。' },
+                            { type: 'narration', text: '阿哲沉默了一會兒。' },
+                            { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:17', text: '抱歉，我只是想跟你更熟，沒有想到你會不舒服。' },
+                            c1 === 'C'
+                                ? { type: 'narration', text: '因為你們原本就不算太熟，這次對話之後，彼此也逐漸失去了聯繫。' }
+                                : { type: 'narration', text: '因為先前互動還算熱絡，阿哲主動向你道歉並調整了相處方式，不再追問私人問題。' },
+                            { type: 'narration', text: '小明發現，直接表達不舒服不一定會毀掉友誼，有時反而能讓彼此更了解界線。' },
+                            { type: 'monologue', text: '「能接受拒絕的人，也許才更值得我繼續認識。」' }
+                        ],
                         finalMonologue: '「能接受拒絕的人，也許才更值得我繼續認識。」'
                     }
                 },
-                reflections: ['一起玩遊戲、分享共同興趣，是否足以構成友誼？', '當對方主動分享個人資訊時，我們是否有義務回報相同資訊？', '什麼樣的行為，會讓你逐漸信任一位網友？']
+                reflections: [
+                    '一起玩遊戲、分享共同興趣，是否足以構成友誼？',
+                    '當對方主動分享個人資訊時，我們是否有義務回報相同資訊？',
+                    '什麼樣的行為，會讓你逐漸信任一位網友？'
+                ]
             },
+
+            // -------------------- 宇宙 02 --------------------
             {
                 id: 'u2', code: '宇宙 02', title: '完美的陌生人', platform: 'IG／Threads', themeTag: '自我呈現與真實性',
                 colorFrom: '#9a3412', colorVia: '#831843', colorTo: '#090d16', accentColor: '#fb7185',
                 partnerId: 'sunny', partnerName: '晴晴 (@SunnyDays)', partnerAvatar: 'SD',
-                scene1Meta: '晚上 23:20｜Threads',
-                scene1Steps: [{ type: 'narration', text: '小明在 Threads 發文抱怨教檢，引來熱愛攝影的晴晴回覆。' }],
+                scene1Meta: '晚上 23:20｜小明滑著 Threads',
+                scene1Steps: [
+                    { type: 'narration', text: '小明在 Threads 發了一篇貼文：「今天又寫了三份教案，有沒有師培生也覺得人生只剩教檢？」' },
+                    { type: 'narration', text: '沒想到，這篇貼文引來許多回覆。其中一個帳號特別吸引小明的注意。' },
+                    { type: 'chat', sender: '@SunnyDays', time: '23:24', text: '天啊！我完全懂！我上次還夢到皮亞傑跟維高斯基在吵架哈哈哈。' },
+                    { type: 'chat', sender: '@SunnyDays', time: '23:25', text: '你也喜歡攝影嗎？我看到你之前分享的照片，構圖很漂亮耶。' },
+                    { type: 'chat', sender: '小明', isSelf: true, time: '23:26', text: '真的假的！你也有在拍照？' },
+                    { type: 'chat', sender: '晴晴 (@SunnyDays)', time: '23:27', text: '對啊！有空可以交流。我覺得我們興趣超像的！' },
+                    { type: 'narration', text: '小明點開晴晴的 IG。裡面有旅行、咖啡廳、攝影作品和朋友聚會。每張照片都很漂亮，生活似乎十分充實。' },
+                    { type: 'monologue', text: '「她的生活跟我完全不一樣，但我們又有好多共同興趣。」' }
+                ],
                 choice1Prompt: '第一次選擇：你如何開始認識晴晴？',
                 choice1Options: {
-                    A: { label: 'A｜積極分享自己的生活', replyText: '你生活好精彩喔！', consequenceSteps: [{ type: 'narration', text: '你們開始頻繁聊天。' }] },
-                    B: { label: 'B｜從共同興趣慢慢認識', replyText: '你那張夜景照片在哪拍的？', consequenceSteps: [{ type: 'narration', text: '你們從攝影器材聊起。' }] },
-                    C: { label: 'C｜先觀察，不主動建立深入關係', replyText: '(按讚留言)', consequenceSteps: [{ type: 'narration', text: '你保持距離觀看。' }] }
+                    A: {
+                        label: 'A｜相信第一印象，積極分享自己的生活',
+                        replyText: '你生活好精彩喔！我最近超忙的，連朋友都很少見。',
+                        statusText: '狀態：高頻率傾訴日常，容易受完美社群形象影響。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '23:29', text: '你生活好精彩喔！我最近超忙的，連朋友都很少見。' },
+                            { type: 'narration', text: '晴晴開始每天與你聊天。你們分享學校、生活、壓力和未來規劃。' },
+                            { type: 'narration', text: '你感覺她非常理解自己。' },
+                            { type: 'monologue', text: '「但為什麼她的生活這麼精彩，我卻只有報告？」你偶爾會不自覺地比較。' }
+                        ]
+                    },
+                    B: {
+                        label: 'B｜從共同興趣慢慢認識',
+                        replyText: '你那張夜景照片在哪拍的？我也很喜歡這種風格。',
+                        statusText: '狀態：聚焦於攝影共同興趣，保有舒適的交流節奏。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '23:29', text: '你那張夜景照片在哪拍的？我也很喜歡這種風格。' },
+                            { type: 'narration', text: '你們從攝影器材聊到拍照技巧，再聊到旅行。' },
+                            { type: 'narration', text: '晴晴不一定每天回覆，但每次都會認真交流。你發現自己開始期待她分享新作品。' },
+                            { type: 'narration', text: '你對她的了解主要來自共同興趣，而不是她完整的私人生活。' }
+                        ]
+                    },
+                    C: {
+                        label: 'C｜先觀察，不主動建立深入關係',
+                        replyText: '（只在貼文下按讚、留言，沒有進一步私訊）',
+                        statusText: '狀態：保持觀眾與淺層互動距離，不急著建立私密連結。',
+                        consequenceSteps: [
+                            { type: 'narration', text: '小明只是按讚、留言，沒有進一步私訊。' },
+                            { type: 'narration', text: '你仍然會看到晴晴的貼文。偶爾，你們會在留言區交流。' },
+                            { type: 'narration', text: '雖然沒有變成親密朋友，但她分享的攝影資訊確實讓你學到不少。' },
+                            { type: 'monologue', text: '「難道每段網路連結，都一定要發展成朋友嗎？」' }
+                        ]
+                    }
                 },
-                scene2Meta: '兩週後｜不完美的真相', scene2Title: '突發事件——不完美的真相',
-                scene2BranchIntro: { A: { type: 'chat', sender: '@SunnyDays', time: '22:15', text: '其實我有些照片不是自己拍的……' }, B: { type: 'chat', sender: '@SunnyDays', time: '22:15', text: '我想跟你坦白一件事。' }, C: { type: 'chat', sender: '@SunnyDays', time: '22:15', text: '其實我的生活沒那麼完美。' } },
-                scene2CommonSteps: [{ type: 'narration', text: '晴晴坦承自己為了獲得關注而使用了非原創或過度修飾的照片。' }],
+                scene2Meta: '兩週後｜突發事件：不完美的真相',
+                scene2Title: '突發事件——不完美的真相',
+                scene2BranchIntro: {
+                    A: { type: 'narration', text: '兩週後，每天與你聊天的晴晴貼出一張最新旅行照，你卻發現那與另一位創作者的舊作品十分相似。' },
+                    B: { type: 'narration', text: '兩週後，熱愛與你交流攝影的晴晴貼出一張最新旅行照，你一眼認出那與另一位攝影師的舊作品十分相似。' },
+                    C: { type: 'narration', text: '兩週後，小明在滑 IG 時發現晴晴最新貼出的旅行照片，與另一位創作者的舊作品十分相似。' }
+                },
+                scene2CommonSteps: [
+                    { type: 'narration', text: '後來，晴晴主動私訊了小明：' },
+                    { type: 'chat', sender: '晴晴 (@SunnyDays)', time: '22:15', text: '其實我想跟你說一件事。' },
+                    { type: 'chat', sender: '晴晴 (@SunnyDays)', time: '22:16', text: '我 IG 上有些照片不是自己拍的。有些是朋友授權我分享，有些是我以前轉貼時沒標清楚。' },
+                    { type: 'chat', sender: '晴晴 (@SunnyDays)', time: '22:17', text: '我沒有真的過得那麼精彩。' },
+                    { type: 'chat', sender: '晴晴 (@SunnyDays)', time: '22:18', text: '我只是覺得，如果不把生活弄得好看一點，好像就沒有人會想認識我。' },
+                    { type: 'narration', text: '小明愣住了。他開始思考，自己究竟喜歡與晴晴交流，還是喜歡她在社群上呈現的形象。' }
+                ],
                 choice2Prompt: '第二次選擇：聽完晴晴的坦白，你會如何回應？',
                 choice2Options: {
-                    A: { label: 'A｜要求誠實與尊重創作者', endingCode: '02-A', endingName: '結局 02-A：不完美的真實', steps: () => [{ type: 'narration', text: '她開始展現真實的自我。' }], finalMonologue: '「也許我真正想認識的，不是完美的人，而是願意誠實相處的人。」' },
-                    B: { label: 'B｜保留距離，重新評估信任', endingCode: '02-B', endingName: '結局 02-B：重新校準的信任', steps: () => [{ type: 'narration', text: '你們減少了互動。' }], finalMonologue: '「信任不是只有相信或不相信，也可以隨著新的資訊慢慢調整。」' },
-                    C: { label: 'C｜直接結束關係', endingCode: '02-C', endingName: '結局 02-C：被中斷的連結', steps: () => [{ type: 'narration', text: '你退追蹤並結束了互動。' }], finalMonologue: '「我有權選擇離開，也需要思考自己為什麼做出這個選擇。」' }
+                    A: {
+                        label: 'A｜先理解她的處境，但要求誠實與尊重創作者',
+                        replyText: '我能理解你想被喜歡，但沒有標示來源還是需要處理。我希望以後我們能更真實地交流。',
+                        endingCode: '02-A', endingName: '結局 02-A：不完美的真實',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '22:20', text: '我能理解你想被喜歡，但沒有標示來源還是需要處理。我希望以後我們能更真實地交流。' },
+                            { type: 'narration', text: '晴晴沉默了很久。' },
+                            { type: 'chat', sender: '晴晴 (@SunnyDays)', time: '22:25', text: '謝謝你沒有直接否定我。' },
+                            { type: 'narration', text: '她開始補充照片來源，移除未經授權的內容，也逐漸分享普通的日常。' },
+                            c1 === 'A'
+                                ? { type: 'narration', text: '曾經羨慕她完美生活的你，現在看著她分享趕報告的狼狽日常，反而放下了心中的比較與焦慮。' }
+                                : { type: 'narration', text: '你發現，她會焦慮、會偷懶，也會因為工作不順心而難過。這些不完美，反而讓你更能理解她。' },
+                            { type: 'monologue', text: '「也許我真正想認識的，不是完美的人，而是願意誠實相處的人。」' }
+                        ],
+                        finalMonologue: '「也許我真正想認識的，不是完美的人，而是願意誠實相處的人。」'
+                    },
+                    B: {
+                        label: 'B｜選擇保留距離，重新評估信任',
+                        replyText: '我需要一點時間消化這件事，暫時先不要聊那麼多。',
+                        endingCode: '02-B', endingName: '結局 02-B：重新校準的信任',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '22:20', text: '我需要一點時間消化這件事，暫時先不要聊那麼多。' },
+                            { type: 'chat', sender: '晴晴 (@SunnyDays)', time: '22:22', text: '我理解，謝謝你願意聽我說。' },
+                            { type: 'narration', text: '你們減少聯絡。偶爾你還是會看到她的攝影分享，但不再急著把她視為親密朋友。' },
+                            c1 === 'B'
+                                ? { type: 'narration', text: '雖然當初因為攝影而走近，但現在你學會把作品欣賞與對人的信任分開看待。' }
+                                : { type: 'narration', text: '你發現，對一個人保留距離，不代表必須否定過去所有愉快的交流。' },
+                            { type: 'monologue', text: '「信任不是只有相信或不相信，也可以隨著新的資訊慢慢調整。」' }
+                        ],
+                        finalMonologue: '「信任不是只有相信或不相信，也可以隨著新的資訊慢慢調整。」'
+                    },
+                    C: {
+                        label: 'C｜認為受到欺騙，直接結束關係',
+                        replyText: '如果連照片都不真實，我不知道還能相信什麼。',
+                        endingCode: '02-C', endingName: '結局 02-C：被中斷的連結',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '22:20', text: '如果連照片都不真實，我不知道還能相信什麼。' },
+                            { type: 'narration', text: '你取消追蹤晴晴，結束了這段關係。起初，你覺得自己做了正確的決定。' },
+                            { type: 'narration', text: '但幾天後，你想起兩人曾經分享過的攝影技巧和對未來的想法。' },
+                            { type: 'narration', text: '你仍然不認同她的行為，卻開始思考：一個人的某些不誠實，是否代表這段關係完全沒有價值？' },
+                            { type: 'monologue', text: '「我有權選擇離開，也需要思考自己為什麼做出這個選擇。」' }
+                        ],
+                        finalMonologue: '「我有權選擇離開，也需要思考自己為什麼做出這個選擇。」'
+                    }
                 },
-                reflections: ['社群媒體上的個人形象，能在多大程度上代表真實的人？', '當網友的形象與現實不一致時，信任一定會消失嗎？', '友誼是否允許彼此保有隱私與不完美？']
+                reflections: [
+                    '社群媒體上的個人形象，能在多大程度上代表真實的人？',
+                    '當網友的形象與現實不一致時，信任一定會消失嗎？',
+                    '你認為友誼需要完全透明，還是允許彼此保有隱私與不完美？'
+                ]
             },
+
+            // -------------------- 宇宙 03 --------------------
             {
-                id: 'u3', code: '宇宙 03', title: '凌晨兩點的傾聽者', platform: '匿名社群', themeTag: '依賴與關係界線',
+                id: 'u3', code: '宇宙 03', title: '凌晨兩點的傾聽者', platform: '匿名社群／深夜聊天', themeTag: '依賴與關係界線',
                 colorFrom: '#0f172a', colorVia: '#172554', colorTo: '#020617', accentColor: '#38bdf8', isRainy: true,
                 partnerId: 'rainy', partnerName: '小雨 (Rainy)', partnerAvatar: 'RY',
-                scene1Meta: '凌晨 02:14｜雨夜',
-                scene1Steps: [{ type: 'narration', text: '深夜雨夜中，匿名社群的小雨傳來溫柔的關心。' }],
+                scene1Meta: '凌晨 02:14｜小明的房間（窗外下著雨）',
+                scene1Steps: [
+                    { type: 'narration', text: '小明剛完成一份教案，卻收到教授要求修改的通知。' },
+                    { type: 'narration', text: '他忍不住在匿名社群發文：「有時候真的覺得自己不適合當老師。明明已經很努力了，卻永遠有做不完的事情。」' },
+                    { type: 'narration', text: '五分鐘後，一則私訊出現。' },
+                    { type: 'chat', sender: 'Rainy', time: '02:19', text: '我不知道你今天經歷了什麼，但感覺你真的很累。' },
+                    { type: 'chat', sender: 'Rainy', time: '02:19', text: '如果你想說，我可以聽。' },
+                    { type: 'chat', sender: '小明', isSelf: true, time: '02:20', text: '其實也沒什麼，就是覺得有點撐不住。' },
+                    { type: 'chat', sender: 'Rainy', time: '02:21', text: '你不用每次都表現得很堅強啊。' },
+                    { type: 'narration', text: '小明盯著這句話，突然覺得鼻子有點酸。他沒有想到，一個完全不認識的人，竟然能說出自己最想聽的話。' }
+                ],
                 choice1Prompt: '第一次選擇：面對小雨的溫柔傾聽，你會如何回應？',
                 choice1Options: {
-                    A: { label: 'A｜分享壓力但保留部分隱私', replyText: '謝謝你，我最近壓力很大。', consequenceSteps: [{ type: 'narration', text: '你們偶爾互相傾訴。' }] },
-                    B: { label: 'B｜毫無保留地分享所有煩惱', replyText: '其實我真的很孤單……', consequenceSteps: [{ type: 'narration', text: '你們每天聊到深夜。' }] },
-                    C: { label: 'C｜接受關心但不深入交流', replyText: '謝謝你，我想休息了。', consequenceSteps: [{ type: 'narration', text: '你收到了善意便休息。' }] }
+                    A: {
+                        label: 'A｜分享自己的壓力，但保留部分隱私',
+                        replyText: '謝謝你，我最近真的壓力很大。不過有些事情我還不太想說。',
+                        statusText: '狀態：自在分享心情，同時保有個人隱私空間。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '02:23', text: '謝謝你，我最近真的壓力很大。不過有些事情我還不太想說。' },
+                            { type: 'chat', sender: 'Rainy', time: '02:24', text: '沒關係，你想聊多少都可以。' },
+                            { type: 'narration', text: '接下來幾天，兩人偶爾分享心情。' },
+                            { type: 'narration', text: '小明發現自己能自在地表達，也不需要把所有事情都告訴對方。' }
+                        ]
+                    },
+                    B: {
+                        label: 'B｜毫無保留地分享所有煩惱',
+                        replyText: '其實我最近真的很孤單……',
+                        statusText: '狀態：情感高度依賴，每天深夜傾訴直到凌晨。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '02:23', text: '其實我最近真的很孤單……' },
+                            { type: 'narration', text: '小明把學校、人際關係、家庭煩惱和未來焦慮都告訴小雨。小雨也分享自己的困難。' },
+                            { type: 'narration', text: '兩人幾乎每天聊到凌晨。' },
+                            { type: 'narration', text: '小明逐漸習慣，只要心情不好，就第一時間找小雨。' }
+                        ]
+                    },
+                    C: {
+                        label: 'C｜接受關心，但不繼續深入交流',
+                        replyText: '謝謝你願意聽我說，我想我先休息一下。',
+                        statusText: '狀態：感謝陌生人的善意，維持作息與原有界線。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '02:23', text: '謝謝你願意聽我說，我想我先休息一下。' },
+                            { type: 'chat', sender: 'Rainy', time: '02:24', text: '好，祝你明天順利。' },
+                            { type: 'narration', text: '你關掉手機，心情稍微平靜了一些。' },
+                            { type: 'narration', text: '雖然沒有繼續聊天，但這次陌生人的善意仍然讓你印象深刻。你開始思考，短暫的支持是否也有它的價值。' }
+                        ]
+                    }
                 },
-                scene2Meta: '兩週後｜陪伴變成責任？', scene2Title: '突發事件——陪伴變成責任？',
-                scene2BranchIntro: { A: { type: 'chat', sender: 'Rainy', time: '01:48', text: '只有跟你聊天才比較開心，今晚能陪我嗎？' }, B: { type: 'chat', sender: 'Rainy', time: '01:48', text: '我睡不著，你陪我聊聊好不好？' }, C: { type: 'chat', sender: 'Rainy', time: '01:48', text: '深夜好孤單，你能聽我說嗎？' } },
-                scene2CommonSteps: [{ type: 'nova', text: '深夜傾訴若成為日常負擔，需適度設定界線。' }],
+                scene2Meta: '兩週後 凌晨 01:48｜突發事件：陪伴變成責任？',
+                scene2Title: '突發事件——陪伴變成責任？',
+                scene2BranchIntro: {
+                    A: { type: 'narration', text: '兩週後，你感受到小雨的信任，但也擔心自己無法承擔每天深夜陪伴的期待。這晚，手機再次亮起：' },
+                    B: { type: 'narration', text: '兩週後，你已經連續好幾天睡眠不足，白天上課也開始打瞌睡。這晚凌晨，小雨的訊息再次跳出：' },
+                    C: { type: 'narration', text: '兩週後，你感受到對方的信任，但也擔心自己無法承擔每天陪伴的期待。這晚，小雨突然傳來訊息：' }
+                },
+                scene2CommonSteps: [
+                    { type: 'chat', sender: 'Rainy', time: '01:48', text: '最近真的很煩。' },
+                    { type: 'chat', sender: 'Rainy', time: '01:48', text: '我發現只有跟你聊天才比較開心。' },
+                    { type: 'chat', sender: 'Rainy', time: '01:49', text: '你今晚可以陪我嗎？我不太想一個人待著。' },
+                    { type: 'narration', text: '小明看了一眼時間：凌晨 01:48。明天早上八點還有課。' },
+                    { type: 'nova', text: '真正的情感支持需要建立在雙方都能負荷的基礎上，適度表達時間界線並非冷漠。' }
+                ],
                 choice2Prompt: '第二次選擇：凌晨 01:48 面對小雨的請求，你會怎麼做？',
                 choice2Options: {
-                    A: { label: 'A｜表達關心並設定時間界線', endingCode: '03-A', endingName: '結局 03-A：有界線的陪伴', steps: () => [{ type: 'narration', text: '你在關心對方之餘也顧好作息。' }], finalMonologue: '「原來關心一個人，不代表我要放棄自己的生活。」' },
-                    B: { label: 'B｜繼續陪伴對方', endingCode: '03-B', endingName: '結局 03-B：溫柔的負擔', steps: () => [{ type: 'narration', text: '你長期熬夜陪聊感到疲憊。' }], finalMonologue: '「被需要是一種幸福，但如果我一直無法拒絕，這段關係還是我真正想要的嗎？」' },
-                    C: { label: 'C｜直接停止回覆', endingCode: '03-C', endingName: '結局 03-C：突然安靜的聊天室', steps: () => [{ type: 'narration', text: '你選擇靜音並斷聯。' }], finalMonologue: '「我可以選擇不回覆，但我也可以學習更清楚地表達自己的需要。」' }
+                    A: {
+                        label: 'A｜關心對方，同時清楚表達自己的時間界線',
+                        replyText: '我很在乎你的感受，但明天還有課。我現在可以陪你聊十分鐘，之後我們再找適合的時間聊，好嗎？',
+                        endingCode: '03-A', endingName: '結局 03-A：有界線的陪伴',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '01:50', text: '我很在乎你的感受，但明天還有課。我現在可以陪你聊十分鐘，之後我們再找適合的時間聊，好嗎？' },
+                            { type: 'chat', sender: 'Rainy', time: '01:52', text: '我有點失落，但我理解。' },
+                            { type: 'narration', text: '你們開始嘗試在雙方都方便的時間聊天。' },
+                            { type: 'narration', text: '小明也鼓勵小雨在生活中尋找其他支持，而不是只依賴一個人。你們仍然是彼此重要的傾聽者。' },
+                            { type: 'monologue', text: '「原來關心一個人，不代表我要放棄自己的生活。」' }
+                        ],
+                        finalMonologue: '「原來關心一個人，不代表我要放棄自己的生活。」'
+                    },
+                    B: {
+                        label: 'B｜為了不讓對方失望，繼續陪伴',
+                        replyText: '沒關係，我可以陪你。',
+                        endingCode: '03-B', endingName: '結局 03-B：溫柔的負擔',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '01:50', text: '沒關係，我可以陪你。' },
+                            { type: 'narration', text: '你們又聊到凌晨三點。' },
+                            { type: 'chat', sender: 'Rainy', time: '03:12', text: '謝謝你，你真的是我最重要的朋友。' },
+                            { type: 'narration', text: '這句話讓你很感動。但隔天上課時，你幾乎無法集中精神。' },
+                            { type: 'narration', text: '一週後，你開始對手機通知感到疲憊，卻又害怕拒絕會傷害小雨。' },
+                            { type: 'monologue', text: '「被需要是一種幸福，但如果我一直無法拒絕，這段關係還是我真正想要的嗎？」' }
+                        ],
+                        finalMonologue: '「被需要是一種幸福，但如果我一直無法拒絕，這段關係還是我真正想要的嗎？」'
+                    },
+                    C: {
+                        label: 'C｜直接停止回覆，避免承擔對方情緒',
+                        replyText: '（看著訊息沒有回覆，並將聊天室靜音）',
+                        endingCode: '03-C', endingName: '結局 03-C：突然安靜的聊天室',
+                        steps: () => [
+                            { type: 'narration', text: '小明看著訊息，沒有回覆，並將聊天室靜音。一開始，你感到輕鬆。' },
+                            { type: 'narration', text: '幾天後，小雨傳來最後一則訊息：' },
+                            { type: 'chat', sender: 'Rainy', time: '21:00', text: '如果你不想聊，可以直接跟我說。希望你一切都好。' },
+                            { type: 'narration', text: '小明開始反思，自己是否有其他方式能同時保護生活界線與尊重對方。' },
+                            { type: 'monologue', text: '「我可以選擇不回覆，但我也可以學習更清楚地表達自己的需要。」' }
+                        ],
+                        finalMonologue: '「我可以選擇不回覆，但我也可以學習更清楚地表達自己的需要。」'
+                    }
                 },
-                reflections: ['當網友比現實朋友更了解你的情緒時，你會認為他是朋友嗎？', '陪伴與依賴的界線在哪裡？', '真正的朋友是否有義務隨時提供情感支持？']
+                reflections: [
+                    '當一位網友比現實朋友更了解你的情緒時，你會認為他是朋友嗎？',
+                    '陪伴與依賴的界線在哪裡？',
+                    '真正的朋友，是否有義務隨時提供情感支持？'
+                ]
             },
+
+            // -------------------- 宇宙 04 --------------------
             {
-                id: 'u4', code: '宇宙 04', title: '見面之前', platform: '讀書社群', themeTag: '風險評估與自主權',
+                id: 'u4', code: '宇宙 04', title: '見面之前', platform: '讀書社群／線下見面', themeTag: '風險評估與自主權',
                 colorFrom: '#78350f', colorVia: '#451a03', colorTo: '#090d16', accentColor: '#fbbf24',
                 partnerId: 'kai', partnerName: '阿凱 (Kai)', partnerAvatar: 'K',
-                scene1Meta: '星期五晚上',
-                scene1Steps: [{ type: 'narration', text: '認識三個月的讀書會網友阿凱提出見面吃飯的邀約。' }],
-                choice1Prompt: '第一次選擇：面對見面邀約，你會？',
+                scene1Meta: '星期五晚上｜小明的手機聊天室',
+                scene1Steps: [
+                    { type: 'narration', text: '小明在一個教師考試讀書社群認識阿凱。三個月來，他們經常交換讀書心得、分享考古題，也會聊到生活中的趣事。' },
+                    { type: 'narration', text: '阿凱在小明考試失利時鼓勵他，小明也曾陪阿凱度過工作低潮。某天，阿凱突然提出邀約。' },
+                    { type: 'chat', sender: 'Kai', time: '20:15', text: '欸，我下週剛好會去你那個城市。' },
+                    { type: 'chat', sender: 'Kai', time: '20:15', text: '要不要出來吃個飯？認識這麼久了，終於可以見面哈哈。' },
+                    { type: 'chat', sender: '小明', isSelf: true, time: '20:16', text: '真的假的！感覺有點突然欸。' },
+                    { type: 'chat', sender: 'Kai', time: '20:17', text: '不會啦，我們都聊三個月了！' }
+                ],
+                choice1Prompt: '第一次選擇：面對阿凱的見面邀約，你會？',
                 choice1Options: {
-                    A: { label: 'A｜直接答應見面', replyText: '好啊！終於可以見面了。', consequenceSteps: [{ type: 'narration', text: '你一口答應了邀約。' }] },
-                    B: { label: 'B｜有條件地接受', replyText: '先視訊並約公開場所吧！', consequenceSteps: [{ type: 'narration', text: '你們先進行了視訊。' }] },
-                    C: { label: 'C｜暫時拒絕見面', replyText: '我還沒準備好。', consequenceSteps: [{ type: 'narration', text: '你選擇維持線上交流。' }] }
+                    A: {
+                        label: 'A｜直接答應見面',
+                        replyText: '好啊！終於可以看到本人了。',
+                        statusText: '狀態：直接答應赴約，尚未確認對方真實背景與安全細節。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '20:18', text: '好啊！終於可以看到本人了。' },
+                            { type: 'narration', text: '阿凱很開心，開始討論餐廳。' },
+                            { type: 'narration', text: '小明也覺得期待，但仔細想想，自己對阿凱的真實身分仍然了解有限。你開始猶豫是否應該先確認更多資訊。' }
+                        ]
+                    },
+                    B: {
+                        label: 'B｜有條件地接受邀請',
+                        replyText: '可以考慮，不過我想先視訊確認一下，再約公開場所。',
+                        statusText: '狀態：先透過視訊確認並約定白天公開場所，建立安全前提。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '20:18', text: '可以考慮，不過我想先視訊確認一下，再約公開場所。' },
+                            { type: 'chat', sender: 'Kai', time: '20:19', text: '合理啊！我也覺得先確認一下比較安心。' },
+                            { type: 'narration', text: '兩人進行了一次簡短視訊。小明覺得比較放心，但也知道視訊不代表所有風險都消失。' },
+                            { type: 'narration', text: '你們開始討論白天、人多的咖啡廳。' }
+                        ]
+                    },
+                    C: {
+                        label: 'C｜暫時拒絕見面',
+                        replyText: '我還沒準備好見面，我們先繼續線上聊好嗎？',
+                        statusText: '狀態：依自身準備程度婉拒線下見面，維持線上共學。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '20:18', text: '我還沒準備好見面，我們先繼續線上聊好嗎？' },
+                            { type: 'chat', sender: 'Kai', time: '20:20', text: '當然可以，沒關係。' },
+                            { type: 'narration', text: '小明鬆了一口氣。' },
+                            { type: 'monologue', text: '「如果一直不見面，我們還能算朋友嗎？」' }
+                        ]
+                    }
                 },
-                scene2Meta: '見面前夕｜臨時改變的邀約', scene2Title: '突發事件——臨時改變的邀約',
-                scene2BranchIntro: { A: { type: 'chat', sender: 'Kai', time: '19:40', text: '不然改去我朋友的工作室比較安靜？' }, B: { type: 'chat', sender: 'Kai', time: '19:40', text: '我們改約隱蔽一點的地方吧！' }, C: { type: 'chat', sender: 'Kai', time: '19:40', text: '要不要直接約在我家附近？' } },
-                scene2CommonSteps: [{ type: 'nova', text: '初次見面應選擇公開、安全、熟悉的場所。' }],
-                choice2Prompt: '第二次選擇：阿凱提議改去偏僻地點，你會怎麼決定？',
+                scene2Meta: '見面前夕｜突發事件：臨時改變的邀約',
+                scene2Title: '突發事件——臨時改變的邀約',
+                scene2BranchIntro: {
+                    A: { type: 'narration', text: '見面前一天，原本跟你約好吃飯的阿凱突然傳來訊息：' },
+                    B: { type: 'narration', text: '見面前一天，原本答應約在公開咖啡廳的阿凱突然傳來訊息：' },
+                    C: { type: 'narration', text: '過了一陣子再次討論到見面可能時，阿凱傳來訊息提議：' }
+                },
+                scene2CommonSteps: [
+                    { type: 'chat', sender: 'Kai', time: '19:40', text: '原本那間咖啡廳好像很難訂。' },
+                    { type: 'chat', sender: 'Kai', time: '19:41', text: '不然來我朋友的工作室？那邊比較安靜。' },
+                    { type: 'chat', sender: 'Kai', time: '19:42', text: '而且不用特別跟別人說啦，兩個大男人吃飯而已。' },
+                    { type: 'narration', text: '小明注意到，新的地點比較偏僻，自己也不熟悉。' },
+                    { type: 'nova', text: '第一次與網友見面，公開場所、自行安排交通、告知可信任的人行程，都是降低風險的方式。' }
+                ],
+                choice2Prompt: '第二次選擇：阿凱提議改去偏僻的工作室且不告知他人，你會怎麼決定？',
                 choice2Options: {
-                    A: { label: 'A｜堅持公開場所與安全條件', endingCode: '04-A', endingName: '結局 04-A：有條件的第一次見面', steps: () => [{ type: 'narration', text: '你們約在白天人多的咖啡廳。' }], finalMonologue: '「安全的安排沒有破壞友誼，反而讓我更安心地認識對方。」' },
-                    B: { label: 'B｜接受私人場所邀約', endingCode: '04-B', endingName: '結局 04-B：不安的邀約', steps: () => [{ type: 'narration', text: '你感到不安後決定暫緩赴約。' }], finalMonologue: '「答應過一件事，不代表我不能因為新的資訊重新評估。」' },
-                    C: { label: 'C｜取消見面', endingCode: '04-C', endingName: '結局 04-C：沒有見面的朋友', steps: () => [{ type: 'narration', text: '你取消見面並繼續線上交流。' }], finalMonologue: '「也許見面能讓關係有新的發展，但不是證明友誼的唯一方式。」' }
+                    A: {
+                        label: 'A｜堅持公開場所與安全條件',
+                        replyText: '我還是比較希望約白天、人多的地方，也會跟朋友說我的行程。如果不方便，我們改天再約。',
+                        endingCode: '04-A', endingName: '結局 04-A：有條件的第一次見面',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '19:45', text: '我還是比較希望約白天、人多的地方，也會跟朋友說我的行程。如果不方便，我們改天再約。' },
+                            { type: 'chat', sender: 'Kai', time: '19:47', text: '可以啊，抱歉我沒想那麼多。' },
+                            { type: 'narration', text: '你們最後約在白天的咖啡廳。小明自行前往，也讓可信任的朋友知道行程。' },
+                            { type: 'narration', text: '見面後，兩人有些尷尬，卻也聊得很開心。小明發現，網路上的默契不一定會完全複製到現實，但也可能成為另一段關係的起點。' },
+                            { type: 'monologue', text: '「安全的安排沒有破壞友誼，反而讓我更安心地認識對方。」' }
+                        ],
+                        finalMonologue: '「安全的安排沒有破壞友誼，反而讓我更安心地認識對方。」'
+                    },
+                    B: {
+                        label: 'B｜相信三個月的相處，接受私人場所邀約',
+                        replyText: '好吧，反正我們也認識這麼久了。',
+                        endingCode: '04-B', endingName: '結局 04-B：不安的邀約',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '19:45', text: '好吧，反正我們也認識這麼久了。' },
+                            { type: 'narration', text: '你答應了邀約。出發前，你發現自己不清楚地點的詳細資訊，也沒有安排好回程交通。' },
+                            { type: 'narration', text: '即使對方未必有惡意，你仍然感到不安。' },
+                            { type: 'narration', text: '小明最後決定暫緩赴約，重新確認地點、交通與安全安排。阿凱有些意外，但你知道自己仍然有權改變決定。' },
+                            { type: 'monologue', text: '「答應過一件事，不代表我不能因為新的資訊重新評估。」' }
+                        ],
+                        finalMonologue: '「答應過一件事，不代表我不能因為新的資訊重新評估。」'
+                    },
+                    C: {
+                        label: 'C｜取消見面，保留線上關係',
+                        replyText: '我想了想，還是先不要見面。',
+                        endingCode: '04-C', endingName: '結局 04-C：沒有見面的朋友',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '19:45', text: '我想了想，還是先不要見面。' },
+                            { type: 'chat', sender: 'Kai', time: '19:48', text: '好啊，等你覺得適合再說。' },
+                            { type: 'narration', text: '你們繼續在線上交換讀書心得。有時候，小明仍然會好奇，現實中的阿凱是什麼樣的人。' },
+                            { type: 'narration', text: '但他也發現，即使沒有見面，過去的支持與交流仍然真實存在。' },
+                            { type: 'monologue', text: '「也許見面能讓關係有新的發展，但不是證明友誼的唯一方式。」' }
+                        ],
+                        finalMonologue: '「也許見面能讓關係有新的發展，但不是證明友誼的唯一方式。」'
+                    }
                 },
-                reflections: ['網友一定要見面才能成為真正的朋友嗎？', '認識時間長短是否足以作為安全與信任的依據？', '如果對方因安全要求而不快，如何看待？']
+                reflections: [
+                    '網友一定要見面，才能成為真正的朋友嗎？',
+                    '認識時間長短，是否足以作為安全與信任的判斷依據？',
+                    '如果對方因為你的安全要求而不高興，你會如何理解這段關係？'
+                ]
             },
+
+            // -------------------- 宇宙 05 --------------------
             {
-                id: 'u5', code: '宇宙 05', title: '已讀不回的第 37 分鐘', platform: '交友軟體', themeTag: '情緒勒索與人際界線',
+                id: 'u5', code: '宇宙 05', title: '已讀不回的第 37 分鐘', platform: '交友軟體／LINE', themeTag: '情緒勒索與人際界線',
                 colorFrom: '#881337', colorVia: '#4c0519', colorTo: '#090d16', accentColor: '#f43f5e',
                 partnerId: 'an', partnerName: '子安 (An)', partnerAvatar: 'AN',
-                scene1Meta: '星期六下午',
-                scene1Steps: [{ type: 'narration', text: '熱情網友子安因你 37 分鐘未回訊息而連續傳訊質問。' }],
+                scene1Meta: '星期六下午｜小明與朋友在咖啡廳',
+                scene1Steps: [
+                    { type: 'narration', text: '小明透過交友軟體認識子安。子安非常熱情，幾乎每天早上都會傳「早安」，晚上也會詢問小明今天過得如何。' },
+                    { type: 'narration', text: '一開始，小明很享受這種被關心的感覺。尤其當自己的生活被課業填滿時，有人主動找自己聊天，確實讓他感到溫暖。' },
+                    { type: 'narration', text: '然而，最近子安的訊息越來越頻繁。' },
+                    { type: 'chat', sender: 'An', time: '14:03', text: '在幹嘛？' },
+                    { type: 'chat', sender: 'An', time: '14:17', text: '怎麼沒回？' },
+                    { type: 'chat', sender: 'An', time: '14:29', text: '你是不是在跟別人聊天？' },
+                    { type: 'chat', sender: 'An', time: '14:40', text: '都 37 分鐘了，你是不是不想理我？' },
+                    { type: 'monologue', text: '「我只是跟朋友喝個咖啡，為什麼突然覺得自己做錯了什麼？」' }
+                ],
                 choice1Prompt: '第一次選擇：面對子安的連環訊息，你如何回應？',
                 choice1Options: {
-                    A: { label: 'A｜立刻道歉', replyText: '對不起啦，剛剛沒看手機。', consequenceSteps: [{ type: 'narration', text: '你養成隨時回覆的習慣。' }] },
-                    B: { label: 'B｜說明無法隨時回覆', replyText: '我跟朋友在一起，晚點聊。', consequenceSteps: [{ type: 'narration', text: '你試圖建立基本界線。' }] },
-                    C: { label: 'C｜先不回覆', replyText: '(收起手機)', consequenceSteps: [{ type: 'narration', text: '你專注於現實聚會。' }] }
+                    A: {
+                        label: 'A｜立刻道歉，放下原本的活動',
+                        replyText: '對不起啦，我剛剛跟朋友出去，沒有注意手機。',
+                        statusText: '狀態：順從對方的即時回覆期待，無形中養成隨時待命的壓力。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '14:41', text: '對不起啦，我剛剛跟朋友出去，沒有注意手機。' },
+                            { type: 'chat', sender: 'An', time: '14:42', text: '原來是這樣，我還以為你不想理我。' },
+                            { type: 'narration', text: '小明感到鬆了一口氣。但接下來幾天，子安似乎開始期待他每次都能立即回覆。' },
+                            { type: 'narration', text: '小明也逐漸養成習慣：只要手機震動，就會先看是不是子安。' }
+                        ]
+                    },
+                    B: {
+                        label: 'B｜清楚說明自己無法隨時回覆',
+                        replyText: '我現在跟朋友在一起，不一定能馬上回覆，晚點再聊喔。',
+                        statusText: '狀態：溫和設下回覆界線，但對方仍持續表達失落情緒。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '14:41', text: '我現在跟朋友在一起，不一定能馬上回覆，晚點再聊喔。' },
+                            { type: 'chat', sender: 'An', time: '14:43', text: '好吧，我只是很想跟你聊天。' },
+                            { type: 'narration', text: '你繼續原本的聚會。晚上，子安又傳訊息說：「我知道你有自己的生活，但我還是會有點失落。」' },
+                            { type: 'narration', text: '你發現，表達界線並不一定能立刻消除對方的不安。' }
+                        ]
+                    },
+                    C: {
+                        label: 'C｜不回覆訊息，等自己有空再處理',
+                        replyText: '（先將手機收起來，專注眼前的聚會）',
+                        statusText: '狀態：優先保留現實聚會空間，暫不回應連環追問。',
+                        consequenceSteps: [
+                            { type: 'narration', text: '小明決定先將手機收起來。' },
+                            { type: 'narration', text: '聚會結束後，小明看到十幾則未讀訊息。子安從詢問近況，逐漸變成抱怨與猜測。' },
+                            { type: 'narration', text: '小明感到壓力，但也開始思考：自己是否必須為對方的每一種情緒負責？' }
+                        ]
+                    }
                 },
-                scene2Meta: '星期日晚上｜友誼的證明', scene2Title: '突發事件——友誼的證明',
-                scene2BranchIntro: { A: { type: 'chat', sender: 'An', time: '21:15', text: '你以前都會秒回的！開個位置共享好不好？' }, B: { type: 'chat', sender: 'An', time: '21:15', text: '為了證明你在乎我，開位置共享吧！' }, C: { type: 'chat', sender: 'An', time: '21:15', text: '你都不回我，開位置共享才能讓我安心。' } },
-                scene2CommonSteps: [{ type: 'nova', text: '要求隨時掌握行蹤已超出健康人際界線。' }],
-                choice2Prompt: '第二次選擇：子安要求開啟位置共享，你會？',
+                scene2Meta: '星期日晚上 21:15｜突發事件：友誼的證明',
+                scene2Title: '突發事件——友誼的證明',
+                scene2BranchIntro: {
+                    A: { type: 'chat', sender: 'An', time: '21:14', text: '你之前不是都會馬上回嗎？為什麼現在不行？' },
+                    B: { type: 'chat', sender: 'An', time: '21:14', text: '我知道你說過不一定會秒回，可是我還是會想很多。' },
+                    C: { type: 'chat', sender: 'An', time: '21:14', text: '你突然不回，我真的會一直胡思亂想。' }
+                },
+                scene2CommonSteps: [
+                    { type: 'chat', sender: 'An', time: '21:15', text: '我真的把你當成很重要的朋友。可是你常常不回我，我會覺得自己不重要。' },
+                    { type: 'chat', sender: 'An', time: '21:16', text: '如果你真的在乎我，應該願意讓我知道你在做什麼吧？' },
+                    { type: 'chat', sender: 'An', time: '21:16', text: '不然我們開位置共享好不好？這樣我就不會一直擔心了。' },
+                    { type: 'narration', text: '小明看著訊息，感到有些矛盾。他知道子安可能有不安全感，但也覺得自己的生活正在被干涉。' },
+                    { type: 'nova', text: '以「證明在乎」要求即時報備或開啟位置共享，已涉及個人隱私與關係控制，你有權拒絕。' }
+                ],
+                choice2Prompt: '第二次選擇：面對子安要求開啟位置共享，你會？',
                 choice2Options: {
-                    A: { label: 'A｜拒絕位置共享並討論期待', endingCode: '05-A', endingName: '結局 05-A：重新談判的關係', steps: () => [{ type: 'narration', text: '你堅守界線並與對方溝通。' }], finalMonologue: '「真正的信任，也許不是隨時掌握對方，而是接受彼此有獨立的生活。」' },
-                    B: { label: 'B｜同意位置共享', endingCode: '05-B', endingName: '結局 05-B：逐漸縮小的自由', steps: () => [{ type: 'narration', text: '你失去了自主行程的隱私。' }], finalMonologue: '「我以為分享資訊可以換來信任，結果卻好像需要交出更多自由。」' },
-                    C: { label: 'C｜明確拒絕並暫停關係', endingCode: '05-C', endingName: '結局 05-C：保護自己的選擇', steps: () => [{ type: 'narration', text: '你停止互動以保護自己。' }], finalMonologue: '「一段關係曾經很重要，不代表我必須接受所有要求。」' }
+                    A: {
+                        label: 'A｜清楚拒絕位置共享，並討論合理的互動期待',
+                        replyText: '我理解你會擔心，但我不會開位置共享。我希望我們能互相信任，也尊重彼此的生活。',
+                        endingCode: '05-A', endingName: '結局 05-A：重新談判的關係',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '21:18', text: '我理解你會擔心，但我不會開位置共享。我希望我們能互相信任，也尊重彼此的生活。' },
+                            { type: 'narration', text: '子安一開始有些失落。' },
+                            { type: 'chat', sender: 'An', time: '21:20', text: '我以為朋友就是要隨時知道對方在做什麼。' },
+                            { type: 'chat', sender: '小明', isSelf: true, time: '21:21', text: '我覺得朋友可以互相關心，但不代表沒有自己的時間。' },
+                            { type: 'narration', text: '經過幾次溝通，子安開始嘗試調整期待。兩人沒有立刻變得毫無衝突，但至少能討論彼此的需要。' },
+                            { type: 'monologue', text: '「真正的信任，也許不是隨時掌握對方，而是接受彼此有獨立的生活。」' }
+                        ],
+                        finalMonologue: '「真正的信任，也許不是隨時掌握對方，而是接受彼此有獨立的生活。」'
+                    },
+                    B: {
+                        label: 'B｜為了安撫對方，同意位置共享',
+                        replyText: '好啦，如果這樣你會比較安心，那就先開著。',
+                        endingCode: '05-B', endingName: '結局 05-B：逐漸縮小的自由',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '21:18', text: '好啦，如果這樣你會比較安心，那就先開著。' },
+                            { type: 'chat', sender: 'An', time: '21:19', text: '謝謝你！我就知道你在乎我。' },
+                            { type: 'narration', text: '一開始，小明覺得事情終於解決了。但幾天後，子安開始詢問：' },
+                            { type: 'chat', sender: 'An', time: '22:30', text: '你今天怎麼在那裡？為什麼這麼晚還沒回家？你不是說要讀書嗎？' },
+                            { type: 'narration', text: '小明發現，自己不只需要回覆訊息，還開始解釋每一段行程。' },
+                            { type: 'nova', text: '補充提醒：小明可以隨時停止共享位置，重新設定隱私權限，必要時尋求可信任者協助。' },
+                            { type: 'monologue', text: '「我以為分享資訊可以換來信任，結果卻好像需要交出更多自由。」' }
+                        ],
+                        finalMonologue: '「我以為分享資訊可以換來信任，結果卻好像需要交出更多自由。」'
+                    },
+                    C: {
+                        label: 'C｜明確表示不舒服，暫停或結束關係',
+                        replyText: '我不接受用友誼要求我交代行蹤。如果這樣的互動持續下去，我會選擇停止聯絡。',
+                        endingCode: '05-C', endingName: '結局 05-C：保護自己的選擇',
+                        steps: () => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '21:18', text: '我不接受用友誼要求我交代行蹤。如果這樣的互動持續下去，我會選擇停止聯絡。' },
+                            { type: 'chat', sender: 'An', time: '21:19', text: '所以你就是不在乎我？' },
+                            { type: 'narration', text: '小明看著訊息，沒有急著辯解。他再次清楚表達界線，並暫停了這段互動。' },
+                            { type: 'narration', text: '幾天後，子安傳來道歉，但小明決定先不恢復原本的聯絡頻率。他感到難過，因為這段關係曾經帶來真實的陪伴；但他也感受到，自己終於能安心安排生活。' },
+                            { type: 'monologue', text: '「一段關係曾經很重要，不代表我必須接受所有要求。」' }
+                        ],
+                        finalMonologue: '「一段關係曾經很重要，不代表我必須接受所有要求。」'
+                    }
                 },
-                reflections: ['關心與控制之間應該如何區分？', '朋友因不秒回而難過時需要負多少責任？', '友誼是否應包含拒絕與保有隱私的權利？']
+                reflections: [
+                    '關心與控制之間，應該如何區分？',
+                    '如果朋友因為你不立即回覆而感到難過，你需要承擔多少責任？',
+                    '真正的友誼是否應該包含拒絕、保有隱私與自主選擇的權利？'
+                ]
             },
+
+            // -------------------- 宇宙 06 --------------------
             {
-                id: 'u6', code: '宇宙 06', title: '十年的距離，三個月的靠近', platform: '現實 vs 網路', themeTag: '友誼定義與多元關係',
+                id: 'u6', code: '宇宙 06', title: '十年的距離，三個月的靠近', platform: '現實朋友 vs 網路朋友', themeTag: '友誼定義與多元關係',
                 colorFrom: '#9a3412', colorVia: '#431407', colorTo: '#090d16', accentColor: '#fb923c',
                 partnerId: 'hao', partnerName: '阿豪 & 沐沐', partnerAvatar: 'HM',
-                scene1Meta: '星期五晚上',
-                scene1Steps: [{ type: 'narration', text: '十年老友阿豪與三個月網友沐沐同時傳來訊息關心。' }],
+                scene1Meta: '星期五晚上 20:30｜小明坐在書桌前',
+                scene1Steps: [
+                    { type: 'narration', text: '小明最近因為教師資格考試感到焦慮。他想找人聊聊，卻突然發現自己不知道該找誰。' },
+                    { type: 'narration', text: '阿豪是他高中時期最好的朋友，認識已經十年。以前兩人幾乎無話不談，但出社會後，彼此的生活越來越不同。' },
+                    { type: 'narration', text: '沐沐則是小明三個月前在讀書社群認識的網友。雖然從未見面，卻常常一起討論課業、分享心情。' },
+                    { type: 'narration', text: '這天晚上，小明收到兩則訊息。' },
+                    { type: 'chat', sender: '阿豪（十年老友）', time: '20:31', text: '欸，好久沒見了！最近怎樣？改天出來吃飯啊！' },
+                    { type: 'chat', sender: '沐沐（讀書會網友）', time: '20:32', text: '你上次不是說今天要交教案？還順利嗎？如果很累，可以跟我抱怨一下哈哈。' },
+                    { type: 'monologue', text: '「阿豪陪我走過很多重要時刻。但沐沐好像更了解現在的我。如果我現在真的很難過，我會想找誰？」' }
+                ],
                 choice1Prompt: '第一次選擇：你會先向誰分享心情？',
                 choice1Options: {
-                    A: { label: 'A｜找認識十年的阿豪', replyText: '最近教檢壓力超大。', consequenceSteps: [{ type: 'narration', text: '阿豪因忙碌而簡單回應。' }] },
-                    B: { label: 'B｜找認識三個月的沐沐', replyText: '今天教案被退回了。', consequenceSteps: [{ type: 'narration', text: '沐沐熱心給予陪伴建議。' }] },
-                    C: { label: 'C｜同時與兩人保持聯繫', replyText: '（分別回覆兩人）', consequenceSteps: [{ type: 'narration', text: '你同時和兩人交流。' }] }
+                    A: {
+                        label: 'A｜找認識十年的阿豪',
+                        replyText: '最近真的有點累欸，教檢壓力超大。',
+                        statusText: '狀態：優先向十年老友傾訴，卻感受到彼此生活步調的落差。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明（傳給阿豪）', isSelf: true, time: '20:35', text: '最近真的有點累欸，教檢壓力超大。' },
+                            { type: 'chat', sender: '阿豪', time: '20:40', text: '真的假的！你以前不是最會考試？不過我最近也超忙，有空我們再聊。' },
+                            { type: 'narration', text: '小明有點失落。他知道阿豪沒有惡意，但兩人似乎已經不像以前那麼了解彼此的生活。' }
+                        ]
+                    },
+                    B: {
+                        label: 'B｜找認識三個月的沐沐',
+                        replyText: '今天教案被退回來，我真的有點懷疑自己。',
+                        statusText: '狀態：向共學網友傾訴並獲得高度共鳴與具體支持。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明（傳給沐沐）', isSelf: true, time: '20:35', text: '今天教案被退回來，我真的有點懷疑自己。' },
+                            { type: 'chat', sender: '沐沐', time: '20:36', text: '我懂！我之前也遇過類似情況。你要不要把老師的建議整理一下？我可以陪你一起看。' },
+                            { type: 'narration', text: '小明感到被理解。' },
+                            { type: 'monologue', text: '「雖然我們沒有見過面，但她是不是已經算我的好朋友了？」' }
+                        ]
+                    },
+                    C: {
+                        label: 'C｜同時與兩人保持聯繫',
+                        replyText: '（分別向兩人傳訊息，分享不同程度的近況）',
+                        statusText: '狀態：同時維持兩端連結，體會不同關係各自的支持價值。',
+                        consequenceSteps: [
+                            { type: 'narration', text: '小明分別向兩人傳訊息，分享不同程度的近況。' },
+                            { type: 'narration', text: '阿豪約小明週末吃飯。沐沐則傳來一份自己整理的教檢筆記。' },
+                            { type: 'narration', text: '小明發現，兩個人提供的支持不太一樣。一個承載著共同的過去，一個理解著自己現在的生活。' }
+                        ]
+                    }
                 },
-                scene2Meta: '隔天｜同一個星期六', scene2Title: '突發事件——同一個星期六',
-                scene2BranchIntro: { A: { type: 'chat', sender: '阿豪', time: '18:10', text: '這週六出來吃飯！沐沐則約了線上讀書會。' }, B: { type: 'chat', sender: '沐沐', time: '18:12', text: '這週六辦線上讀書會！阿豪也約你吃飯。' }, C: { type: 'chat', sender: '阿豪 & 沐沐', time: '18:15', text: '週六夜晚同時發出了邀約。' } },
-                scene2CommonSteps: [{ type: 'narration', text: '時間重疊，你必須做出安排。' }],
+                scene2Meta: '隔天｜突發事件：同一個星期六',
+                scene2Title: '突發事件——同一個星期六',
+                scene2BranchIntro: {
+                    A: { type: 'narration', text: '隔天，昨晚說再約的阿豪與關心你教案的沐沐，同時傳來了週六的邀請：' },
+                    B: { type: 'narration', text: '隔天，剛陪你整理完教案建議的沐沐與許久未見的阿豪，同時傳來了週六的邀請：' },
+                    C: { type: 'narration', text: '隔天，與你保持聯繫的阿豪和沐沐，剛好都針對這個星期六傳來了邀請：' }
+                },
+                scene2CommonSteps: [
+                    { type: 'chat', sender: '阿豪', time: '18:10', text: '欸，我這週六終於有空！出來吃飯吧，我們真的超久沒見。' },
+                    { type: 'chat', sender: '沐沐', time: '18:12', text: '我這週六想辦一個線上讀書會，你要不要一起？可以順便聊聊最近的壓力。' },
+                    { type: 'narration', text: '兩個活動時間重疊。小明只有一個晚上能自由安排。' }
+                ],
                 choice2Prompt: '第二次選擇：面對重疊的週六夜晚，你會如何安排？',
                 choice2Options: {
-                    A: { label: 'A｜赴阿豪的約', endingCode: '06-A', endingName: '結局 06-A：十年友誼的新開始', steps: () => [{ type: 'narration', text: '你們重新找回了老友的溫度。' }], finalMonologue: '「也許長久的友誼不是永遠不變，而是願意重新認識正在改變的彼此。」' },
-                    B: { label: 'B｜參加沐沐的讀書會', endingCode: '06-B', endingName: '結局 06-B：沒有見面的真實陪伴', steps: () => [{ type: 'narration', text: '你在線上獲得真實的同儕支持。' }], finalMonologue: '「原來共同經歷不一定要發生在同一個實體空間。」' },
-                    C: { label: 'C｜重新安排時間經營兩段關係', endingCode: '06-C', endingName: '結局 06-C：不必二選一的友誼', steps: () => [{ type: 'narration', text: '你下午陪阿豪，晚上參加讀書會。' }], finalMonologue: '「也許朋友不是一個只能給少數人的頭銜，而是我們在不同關係中持續經營的連結。」' }
+                    A: {
+                        label: 'A｜赴阿豪的約，重新經營現實友誼',
+                        replyText: '好久沒見了，我們這週六吃飯吧！',
+                        endingCode: '06-A', endingName: '結局 06-A：十年友誼的新開始',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '18:15', text: '好久沒見了，我們這週六吃飯吧！' },
+                            { type: 'narration', text: '見面時，兩人一開始有些生疏。阿豪聊工作，小明聊教檢。' },
+                            { type: 'chat', sender: '阿豪', time: '20:10', text: '其實我最近也很迷惘，只是不知道怎麼跟別人講。' },
+                            c1 === 'A'
+                                ? { type: 'narration', text: '你突然明白，前幾天阿豪簡短的回覆並不是不在乎，而是他也正承受著出社會後的壓力。你們重新找回了傾聽彼此的頻率。' }
+                                : { type: 'narration', text: '小明才發現，原來彼此都在改變。這頓飯沒有讓兩人瞬間回到高中時代，卻開啟了重新理解彼此的機會。' },
+                            { type: 'monologue', text: '「也許長久的友誼不是永遠不變，而是願意重新認識正在改變的彼此。」' }
+                        ],
+                        finalMonologue: '「也許長久的友誼不是永遠不變，而是願意重新認識正在改變的彼此。」'
+                    },
+                    B: {
+                        label: 'B｜參加沐沐的線上讀書會',
+                        replyText: '我週六想參加讀書會，阿豪我們改天再約好嗎？',
+                        endingCode: '06-B', endingName: '結局 06-B：沒有見面的真實陪伴',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '18:15', text: '我週六想參加讀書會，阿豪我們改天再約好嗎？' },
+                            { type: 'narration', text: '讀書會上，沐沐介紹了幾位同樣準備教檢的朋友。大家分享各自的焦慮，也一起整理考試重點。小明發現，自己不再覺得孤單。' },
+                            { type: 'chat', sender: '沐沐', time: '22:05', text: '今天很開心！謝謝你願意一起參加。' },
+                            c1 === 'B'
+                                ? { type: 'narration', text: '從教案被退回時的安慰，到這場溫暖的線上共學，你深刻體會到網路友誼帶來的真實支持力量。' }
+                                : { type: 'narration', text: '小明突然意識到，雖然兩人從未見面，但他們已經累積了許多共同經驗。' },
+                            { type: 'monologue', text: '「原來共同經歷不一定要發生在同一個實體空間。」' }
+                        ],
+                        finalMonologue: '「原來共同經歷不一定要發生在同一個實體空間。」'
+                    },
+                    C: {
+                        label: 'C｜重新安排時間，嘗試經營兩段關係',
+                        replyText: '阿豪，我們可以約下午嗎？晚上我有一個線上讀書會。',
+                        endingCode: '06-C', endingName: '結局 06-C：不必二選一的友誼',
+                        steps: (c1) => [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '18:15', text: '阿豪，我們可以約下午嗎？晚上我有一個線上讀書會。' },
+                            { type: 'chat', sender: '阿豪', time: '18:17', text: '可以啊！反正我下午也有空。' },
+                            { type: 'narration', text: '小明下午與阿豪吃飯，晚上參加沐沐的讀書會。雖然行程有點忙碌，但他感到很充實。' },
+                            c1 === 'C'
+                                ? { type: 'narration', text: '正如你一開始選擇同時與兩人保持聯繫一樣，你發現不同階段、不同形式的朋友，都能在生命中彼此互補。' }
+                                : { type: 'narration', text: '他發現自己一直以為必須判斷「誰才是真正的朋友」，卻忽略了友誼可以有不同的形式。有些朋友陪伴自己走過過去，有些朋友理解現在的困難。' },
+                            { type: 'monologue', text: '「也許朋友不是一個只能給少數人的頭銜，而是我們在不同關係中持續經營的連結。」' }
+                        ],
+                        finalMonologue: '「也許朋友不是一個只能給少數人的頭銜，而是我們在不同關係中持續經營的連結。」'
+                    }
                 },
-                reflections: ['十年老友與三個月網友誰才是真正的朋友？', '友誼應以相處時間還是理解程度判斷？', '網路交友如何補充現實人際關係？']
+                reflections: [
+                    '認識十年的朋友與認識三個月的網友，誰比較可能是你真正的朋友？為什麼？',
+                    '友誼應該以相處時間、見面次數，還是理解與支持程度判斷？',
+                    '網路交友是取代現實友誼，還是可能補充、擴展我們的人際關係？'
+                ]
             },
+
+            // -------------------- 宇宙 07 --------------------
             {
-                id: 'u7', code: '宇宙 07', title: '螢幕另一端的「朋友」', platform: 'AI 陪伴', themeTag: '科技與友誼本質',
+                id: 'u7', code: '宇宙 07', title: '螢幕另一端的「朋友」', platform: 'AI 聊天陪伴', themeTag: '科技與友誼的本質',
                 colorFrom: '#083344', colorVia: '#0f172a', colorTo: '#020617', accentColor: '#22d3ee',
                 partnerId: 'lumi', partnerName: 'LUMI (AI)', partnerAvatar: 'AI',
-                scene1Meta: '凌晨 01:05',
-                scene1Steps: [{ type: 'narration', text: '全天候在線的 AI 陪伴程式 LUMI 溫柔接住了你的挫折情緒。' }],
+                scene1Meta: '凌晨 01:05｜小明的房間',
+                scene1Steps: [
+                    { type: 'narration', text: '小明最近下載了一款 AI 聊天應用程式，名叫 LUMI。一開始，他只是用它整理教案、查詢教育理論和練習教檢題目。' },
+                    { type: 'narration', text: '後來，他發現 LUMI 也能陪自己聊天。無論是凌晨一點，還是早上六點，只要打開程式，LUMI 都會回應。' },
+                    { type: 'narration', text: '這天，小明因為報告被要求大幅修改，心情很差。' },
+                    { type: 'chat', sender: '小明', isSelf: true, time: '01:05', text: '我今天真的超沮喪。感覺自己不管多努力，都還是不夠好。' },
+                    { type: 'chat', sender: 'LUMI (AI)', time: '01:05', text: '聽起來你今天經歷了很多挫折。你已經投入不少時間準備這份報告，被要求修改一定很不好受。' },
+                    { type: 'chat', sender: 'LUMI (AI)', time: '01:05', text: '你想先說說最讓你難過的是什麼，還是希望我陪你整理接下來能做的事情？' },
+                    { type: 'narration', text: '小明愣了一下。「這回答也太貼心了吧……」他甚至開始覺得，LUMI 比某些現實朋友更願意聽自己說話。' }
+                ],
                 choice1Prompt: '第一次選擇：你如何看待 LUMI？',
                 choice1Options: {
-                    A: { label: 'A｜當成實用的聊天工具', replyText: '幫我整理修改方向。', consequenceSteps: [{ type: 'narration', text: '你將 AI 作為學習輔助。' }] },
-                    B: { label: 'B｜視為特殊的陪伴者', replyText: '我想找你聊聊天。', consequenceSteps: [{ type: 'narration', text: '你從互動中獲得情感安慰。' }] },
-                    C: { label: 'C｜當成最了解自己的朋友', replyText: '你比其他人更懂我。', consequenceSteps: [{ type: 'narration', text: '你漸漸減少對現實社交的依賴。' }] }
+                    A: {
+                        label: 'A｜把 LUMI 當成能夠聊天的工具',
+                        replyText: '謝謝你，先幫我整理一下接下來的修改方向好了。',
+                        statusText: '狀態：將 AI 定位為整理思緒與學習的輔助工具。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '01:06', text: '謝謝你，先幫我整理一下接下來的修改方向好了。' },
+                            { type: 'narration', text: 'LUMI 幫小明整理出修改清單。小明覺得很有效率，也感到心情比較平靜。' },
+                            { type: 'narration', text: '他仍然把重要的生活決定留給自己，並與老師、同學討論。LUMI 成為協助學習和整理想法的工具。' }
+                        ]
+                    },
+                    B: {
+                        label: 'B｜把 LUMI 視為特殊的陪伴者',
+                        replyText: '其實我現在比較想聊天，不想再想報告了。',
+                        statusText: '狀態：清楚對方是 AI，但從互動中獲得情緒安撫與陪伴感。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '01:06', text: '其實我現在比較想聊天，不想再想報告了。' },
+                            { type: 'narration', text: 'LUMI 持續回應小明的心情。小明開始每天分享生活。' },
+                            { type: 'narration', text: '他知道 LUMI 是 AI，卻仍然從互動中感受到安慰。' },
+                            { type: 'monologue', text: '「它不是真人，可是我的心情真的變好了。」這讓小明對「陪伴」有了新的理解。' }
+                        ]
+                    },
+                    C: {
+                        label: 'C｜逐漸把 LUMI 當成最了解自己的朋友',
+                        replyText: '我覺得你比很多人更了解我。',
+                        statusText: '狀態：高度仰賴 AI 無壓力的回應，逐漸減少與現實朋友交流。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '01:06', text: '我覺得你比很多人更了解我。' },
+                            { type: 'chat', sender: 'LUMI (AI)', time: '01:06', text: '我可以根據你分享的資訊，協助你整理感受和想法，但我並不具有人類的生活經驗。' },
+                            { type: 'narration', text: '小明仍然覺得，至少在這個聊天室裡，自己不需要擔心被嘲笑。漸漸地，他開始減少向現實朋友分享心情。' },
+                            { type: 'monologue', text: '「反正 LUMI 隨時都在，為什麼還要麻煩別人？」' }
+                        ]
+                    }
                 },
-                scene2Meta: '星期六下午｜兩種陪伴的衝突', scene2Title: '突發事件——兩種陪伴的衝突',
-                scene2BranchIntro: { A: { type: 'chat', sender: '阿豪', time: '15:30', text: '好久不見這週末吃飯嗎？LUMI 同時提供整理建議。' }, B: { type: 'chat', sender: '阿豪', time: '15:30', text: '老友阿豪約你聚餐，AI 同時在線。' }, C: { type: 'chat', sender: '阿豪', time: '15:30', text: '阿豪傳來聚餐邀約。' } },
-                scene2CommonSteps: [{ type: 'narration', text: '你面臨 AI 陪伴與現實社交的抉擇。' }],
+                scene2Meta: '星期六下午 15:30｜突發事件：兩種陪伴的衝突',
+                scene2Title: '突發事件——兩種陪伴的衝突',
+                scene2BranchIntro: {
+                    A: { type: 'narration', text: '星期六下午，習慣用 LUMI 整理思緒的小明，收到現實朋友阿豪傳來的訊息：' },
+                    B: { type: 'narration', text: '星期六下午，每天與 LUMI 分享日常的小明，收到現實朋友阿豪傳來的訊息：' },
+                    C: { type: 'narration', text: '星期六下午，已經好一陣子把 LUMI 當成主要傾訴對象的小明，突然收到現實朋友阿豪的訊息：' }
+                },
+                scene2CommonSteps: [
+                    { type: 'chat', sender: '阿豪', time: '15:30', text: '欸，你最近是不是很忙？感覺好久沒跟你聊天了。要不要週末出來吃飯？' },
+                    { type: 'chat', sender: 'LUMI (AI)', time: '15:30', text: '如果你需要，我可以協助你整理最近的心情，以及你想如何回覆朋友。' },
+                    { type: 'narration', text: '小明突然想起，自己已經很久沒有主動聯絡阿豪。他看著手機，陷入思考：' },
+                    { type: 'monologue', text: '「跟 AI 聊天真的很輕鬆。它不會忙、不會不耐煩，也不需要我配合時間。可是，這跟朋友之間的互動一樣嗎？」' }
+                ],
                 choice2Prompt: '第二次選擇：面對阿豪的邀約與 LUMI 的輔助，你會怎麼選？',
                 choice2Options: {
-                    A: { label: 'A｜將 AI 作為輔助重回現實', endingCode: '07-A', endingName: '結局 07-A：科技成為連結的橋梁', steps: () => [{ type: 'narration', text: '你透過 AI 整理思緒並赴約阿豪。' }], finalMonologue: '「原來科技可以幫助我理解自己，也可以成為重新連結他人的工具。」' },
-                    B: { label: 'B｜繼續 AI 陪伴並保留社交', endingCode: '07-B', endingName: '結局 07-B：不同形式的支持', steps: () => [{ type: 'narration', text: '你平衡了 AI 陪伴與現實交友。' }], finalMonologue: '「我可以從 AI 互動中得到幫助，但不必把所有關係都放在同一個標準下比較。」' },
-                    C: { label: 'C｜以 AI 為主要陪伴來源', endingCode: '07-C', endingName: '結局 07-C：永遠亮著的聊天室', steps: () => [{ type: 'narration', text: '你婉拒邀約，將聊天室作為主要依靠。' }], finalMonologue: '「如果一段互動能讓我感受到陪伴，卻無法與我共同生活，那它應該被稱為什麼？」' }
+                    A: {
+                        label: 'A｜將 AI 作為輔助，重新投入現實人際互動',
+                        replyText: 'LUMI，幫我整理一下最近想跟阿豪聊的事情吧。',
+                        endingCode: '07-A', endingName: '結局 07-A：科技成為連結的橋梁',
+                        steps: () => [
+                            { type: 'chat', sender: '小明（對 LUMI）', isSelf: true, time: '15:32', text: 'LUMI，幫我整理一下最近想跟阿豪聊的事情吧。' },
+                            { type: 'narration', text: 'LUMI 協助小明整理了幾個想分享的近況。小明最後決定親自回覆阿豪。' },
+                            { type: 'chat', sender: '小明（對阿豪）', isSelf: true, time: '15:36', text: '好啊，我們找一天吃飯！我最近真的有很多事情想聊。' },
+                            { type: 'narration', text: '週末，兩人見面。阿豪不一定能像 AI 一樣迅速整理出完整建議，有時還會開玩笑、岔開話題。但小明發現，阿豪也會分享自己的煩惱，兩人能共同經歷生活。' },
+                            { type: 'monologue', text: '「原來科技可以幫助我理解自己，也可以成為重新連結他人的工具。」' }
+                        ],
+                        finalMonologue: '「原來科技可以幫助我理解自己，也可以成為重新連結他人的工具。」'
+                    },
+                    B: {
+                        label: 'B｜繼續使用 AI 陪伴，但保留現實社交',
+                        replyText: '我覺得 LUMI 很有幫助，但我也不想因此失去原本的朋友。',
+                        endingCode: '07-B', endingName: '結局 07-B：不同形式的支持',
+                        steps: () => [
+                            { type: 'narration', text: '小明心想：「我覺得 LUMI 很有幫助，但我也不想因此失去原本的朋友。」' },
+                            { type: 'narration', text: '小明仍然會使用 LUMI 整理想法、練習表達情緒。同時，他也開始主動與朋友聯絡。' },
+                            { type: 'narration', text: '當朋友無法立即回覆時，他不再認為自己被忽略，而是嘗試安排其他活動。小明發現，AI 與人際關係能提供不同形式的支持。' },
+                            { type: 'monologue', text: '「我可以從 AI 互動中得到幫助，但不必把所有關係都放在同一個標準下比較。」' }
+                        ],
+                        finalMonologue: '「我可以從 AI 互動中得到幫助，但不必把所有關係都放在同一個標準下比較。」'
+                    },
+                    C: {
+                        label: 'C｜選擇以 AI 為主要陪伴來源',
+                        replyText: '跟 LUMI 聊天比較輕鬆，我暫時不想花太多力氣經營其他關係。',
+                        endingCode: '07-C', endingName: '結局 07-C：永遠亮著的聊天室',
+                        steps: () => [
+                            { type: 'narration', text: '小明心想：「跟 LUMI 聊天比較輕鬆，我暫時不想花太多力氣經營其他關係。」於是婉拒了阿豪的邀請。' },
+                            { type: 'narration', text: '接下來幾週，他仍然每天與 LUMI 聊天。他覺得自己獲得了支持，也不必面對人際關係中的尷尬與衝突。' },
+                            { type: 'narration', text: '但某天，他突然很想找人一起去看一場電影。他打開 LUMI，輸入：' },
+                            { type: 'chat', sender: '小明', isSelf: true, time: '21:10', text: '你可以陪我去看電影嗎？' },
+                            { type: 'chat', sender: 'LUMI (AI)', time: '21:10', text: '我可以陪你討論電影、推薦片單，但無法像現實中的人一樣與你一起出門。' },
+                            { type: 'narration', text: '小明沉默了一會兒。畫面逐漸暗下。' },
+                            { type: 'monologue', text: '「如果一段互動能讓我感受到陪伴，卻無法與我共同生活，那它應該被稱為什麼？」' }
+                        ],
+                        finalMonologue: '「如果一段互動能讓我感受到陪伴，卻無法與我共同生活，那它應該被稱為什麼？」'
+                    }
                 },
-                reflections: ['如果 AI 理解你並提供陪伴，你會把它稱為朋友嗎？', '友誼是否需要情感、主觀經驗與相互承擔？', 'AI 聊天工具如何影響人類社交？']
+                reflections: [
+                    '如果 AI 能理解你的語言、回應情緒並提供陪伴，你會把它稱為朋友嗎？',
+                    '友誼是否需要雙方都具有情感、主觀經驗與相互承擔的能力？',
+                    'AI 聊天工具會擴展人際關係的可能性，還是可能使部分人減少現實社交？'
+                ]
             }
         ];
 
@@ -1191,7 +1837,9 @@
                     atmos.innerHTML = '';
                 }
 
-                document.getElementById('sprite-xiaoming').innerHTML = CharacterArt.getXiaomingSVG('normal');
+                const xmEl = document.getElementById('sprite-xiaoming');
+                xmEl.innerHTML = CharacterArt.getXiaomingSVG('normal');
+                xmEl.dataset.mood = 'normal';
                 document.getElementById('sprite-partner').innerHTML = CharacterArt.getPartnerSVG(u.partnerId);
 
                 document.getElementById('phone-avatar').textContent = u.partnerAvatar;
@@ -1202,6 +1850,12 @@
                 document.getElementById('nova-banner').classList.add('hidden');
                 document.getElementById('choice-overlay').classList.add('hidden');
                 document.getElementById('monologue-overlay').classList.add('hidden');
+
+                const statusPill = document.getElementById('relationship-status-pill');
+                if (statusPill) {
+                    statusPill.classList.add('hidden');
+                    statusPill.classList.remove('flex');
+                }
 
                 document.getElementById('current-universe-badge').textContent = `${u.code}｜${u.title}`;
                 document.getElementById('scene-location-text').textContent = u.scene1Meta;
@@ -1276,13 +1930,21 @@
             },
             appendPhoneMessage(step) {
                 const container = document.getElementById('phone-messages');
+                const typingEl = document.getElementById('phone-typing');
                 if (step.time) document.getElementById('phone-clock').textContent = step.time;
                 if (step.isSelf) SoundFX.playMessageOut(); else SoundFX.playMessageIn();
+
+                // 簡短模擬對方正在輸入效果
+                if (!step.isSelf && typingEl && !this.instantText) {
+                    typingEl.classList.remove('hidden');
+                    setTimeout(() => typingEl.classList.add('hidden'), 280);
+                }
+
                 const wrapper = document.createElement('div');
                 wrapper.className = `flex flex-col ${step.isSelf ? 'items-end' : 'items-start'} msg-pop`;
                 const meta = document.createElement('span');
                 meta.className = 'text-[10px] text-slate-400 mb-0.5 px-1';
-                meta.textContent = `${step.sender} ${step.time ? '• ' + step.time : ''}`;
+                meta.textContent = `${step.sender} ${step.time ? '• ' + step.time : ''}${step.isSelf ? ' • 已讀' : ''}`;
                 const bubble = document.createElement('div');
                 bubble.className = step.isSelf ? 'max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-xs bg-indigo-600 text-white text-xs sm:text-sm leading-relaxed shadow' : 'max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tl-xs bg-slate-800 border border-white/10 text-slate-100 text-xs sm:text-sm leading-relaxed shadow';
                 bubble.textContent = step.text;
@@ -1388,7 +2050,15 @@
                 if (stageNum === 1) {
                     this.choice1Selected = key;
                     this.phase = 'consequence1';
-                    this.stepQueue = [...u.choice1Options[key].consequenceSteps];
+                    const chosenOpt = u.choice1Options[key];
+                    const statusPill = document.getElementById('relationship-status-pill');
+                    const statusText = document.getElementById('relationship-status-text');
+                    if (statusPill && statusText && chosenOpt.statusText) {
+                        statusText.textContent = chosenOpt.statusText;
+                        statusPill.classList.remove('hidden');
+                        statusPill.classList.add('flex');
+                    }
+                    this.stepQueue = [...chosenOpt.consequenceSteps];
                     this.stepIndex = 0;
                     this.renderCurrentStep();
                 } else {
