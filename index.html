@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Friend.exe：小明的網路宇宙</title>
+    <!-- 引入 Tailwind CSS 與 Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --theme-primary: #6366f1;
+            --theme-secondary: #a855f7;
+            --theme-bg: #090d16;
+            --theme-accent: #38bdf8;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        input, textarea {
+            user-select: text;
+        }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #090d16;
+            color: #f8fafc;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100dvh;
+            width: 100vw;
+        }
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* 視覺小說背景濾鏡與動態光暈 */
+        .vn-backdrop {
+            transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .vn-backdrop::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 25%, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.65) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 玻璃擬態面板 */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        .glass-light {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* 對話氣泡彈出動畫 */
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(12px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .msg-pop {
+            animation: popIn 0.32s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+
+        /* 突發事件震動效果 */
+        @keyframes pulseAlert {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5); }
+            50% { box-shadow: 0 0 35px 8px rgba(244, 63, 94, 0.25); }
+        }
+        .incident-glow {
+            animation: pulseAlert 2s infinite;
+        }
+
+        /* 呼吸燈箭頭 */
+        @keyframes bounceRight {
+            0%, 100% { transform: translateX(0); opacity: 0.6; }
+            50% { transform: translateX(5px); opacity: 1; }
+        }
+        .next-indicator {
+            animation: bounceRight 1.1s infinite;
+        }
+
+        /* 雨滴特效 (宇宙03) */
+        .rain-line {
+            position: absolute;
+            background: linear-gradient(transparent, rgba(186, 230, 253, 0.45));
+            width: 1.5px;
+            height: 75px;
+            animation: fall linear infinite;
+            pointer-events: none;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-100px) rotate(12deg); opacity: 0; }
+            20% { opacity: 0.7; }
+            100% { transform: translateY(100vh) rotate(12deg); opacity: 0; }
+        }
+
+        /* 捲軸美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.6);
+        }
+
+        /* 角色立繪 PNG 與 SVG 備援容器 */
+        .xm-portrait-wrap {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .xm-portrait-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center bottom;
+            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+            display: block;
+        }
+        .xm-portrait-fallback {
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 科幻深空宇宙背景與光束 */
+        .cosmic-bg {
+            background:
+                radial-gradient(circle at 75% 35%, rgba(56, 189, 248, 0.16) 0%, transparent 45%),
+                radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.22) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(79, 70, 229, 0.18) 0%, transparent 55%),
+                linear-gradient(135deg, #040711 0%, #0b112c 48%, #140d2b 100%);
+            position: relative;
+        }
+        .cosmic-grid {
+            background-image:
+                linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+        }
+        @keyframes energyFlow {
+            0% { transform: translateX(-15%) translateY(0) rotate(-12deg); opacity: 0.25; }
+            50% { transform: translateX(10%) translateY(-12px) rotate(-12deg); opacity: 0.55; }
+            100% { transform: translateX(-15%) translateY(0) rotate(-12deg); opacity: 0.25; }
+        }
+        .energy-stream {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), rgba(168, 85, 247, 0.8), transparent);
+            filter: blur(1px);
+            animation: energyFlow 9s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        /* 科技感發光標題與按鈕 */
+        .cyber-title-glow {
+            text-shadow:
+                0 0 18px rgba(56, 189, 248, 0.55),
+                0 0 36px rgba(99, 102, 241, 0.35);
+        }
+        .neon-primary-btn {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 52%, #0ea5e9 100%);
+            background-size: 200% 200%;
+            border: 1.5px solid rgba(125, 211, 252, 0.75);
+            box-shadow:
+                0 0 22px rgba(56, 189, 248, 0.4),
+                0 0 40px rgba(124, 58, 237, 0.25),
+                inset 0 1px 1px rgba(255, 255, 255, 0.45);
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .neon-primary-btn:hover {
+            transform: translateY(-3px) scale(1.015);
+            border-color: #ffffff;
+            box-shadow:
+                0 0 30px rgba(56, 189, 248, 0.7),
+                0 0 55px rgba(139, 92, 246, 0.45),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
+
+        /* 七道尖拱型全息宇宙傳送門 */
+        .arch-portal {
+            border-radius: 95px 95px 18px 18px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(9, 13, 26, 0.95) 100%);
+            border: 2px solid var(--arch-color, #38bdf8);
+            box-shadow:
+                0 0 20px var(--arch-glow, rgba(56, 189, 248, 0.45)),
+                inset 0 0 24px var(--arch-glow, rgba(56, 189, 248, 0.22));
+            transition: all 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .arch-portal::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 92px 92px 14px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .arch-portal:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow:
+                0 0 34px var(--arch-color, #38bdf8),
+                0 16px 36px rgba(0, 0, 0, 0.85),
+                inset 0 0 32px var(--arch-glow, rgba(56, 189, 248, 0.38));
+        }
+
+        /* 手寫感霓虹發光字體效果 */
+        .neon-script-title {
+            text-shadow:
+                0 0 10px rgba(56, 189, 248, 0.95),
+                0 0 24px rgba(59, 130, 246, 0.8),
+                0 0 44px rgba(99, 102, 241, 0.65);
+        }
+        /* 地面金色全息光環 */
+        .floor-magic-ring {
+            background: radial-gradient(ellipse at center, rgba(251, 191, 36, 0.28) 0%, rgba(244, 114, 182, 0.18) 45%, transparent 72%);
+            border: 1.5px solid rgba(253, 224, 71, 0.65);
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.45), inset 0 0 20px rgba(244, 114, 182, 0.35);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .energy-stream {
+                animation: none !important;
+            }
+        }
+
+        /* 第三階段：七道奇幻傳送門首頁背景；失去圖片時保留原本 cosmic-bg */
+        #screen-home.portal-scene-bg {
+            background-image:
+                linear-gradient(180deg, rgba(3, 7, 18, .64) 0%, rgba(3, 7, 18, .42) 35%, rgba(3, 7, 18, .68) 100%),
+                url('./assets/backgrounds/universe_hub_bg.jpg');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-color: #090d16;
+        }
+        #screen-home.portal-scene-bg .cosmic-grid { opacity: .18; }
+        #screen-home.portal-scene-bg .arch-portal {
+            background: linear-gradient(180deg, rgba(12, 20, 43, .72), rgba(4, 9, 23, .87));
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        @media (max-width: 640px) {
+            #screen-home.portal-scene-bg { background-position: 50% center; }
+        }
+    </style>
+</head>
+<body class="relative select-none">
+
+    <!-- 頂部全域導覽列 -->
+    <header id="top-bar" class="fixed top-0 left-0 right-0 z-40 px-3 py-2.5 md:px-6 flex items-center justify-between pointer-events-none">
+        <div class="flex items-center gap-2 pointer-events-auto">
+            <button onclick="GameApp.confirmGoHome()" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-indigo-400/60 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-house text-indigo-400"></i>
+                <span class="hidden sm:inline">首頁</span>
+            </button>
+            <button id="btn-universe-hub" onclick="GameApp.confirmGoHub()" class="hidden glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-indigo-400/60 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-compass text-sky-400"></i>
+                <span>宇宙選擇</span>
+            </button>
+            <button id="btn-restart-universe" onclick="GameApp.restartCurrentUniverse()" class="hidden glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-amber-400/60 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-right text-amber-400"></i>
+                <span class="hidden sm:inline">重新開始</span>
+            </button>
+        </div>
+
+        <!-- 當前宇宙進度指示 -->
+        <div id="top-progress-pill" class="hidden glass-panel px-3.5 py-1.5 rounded-full items-center gap-3 pointer-events-auto max-w-[45vw] sm:max-w-xs">
+            <span id="current-universe-badge" class="text-xs font-bold tracking-wider truncate text-indigo-300">宇宙 01</span>
+            <div class="w-16 sm:w-24 h-1.5 bg-slate-700/80 rounded-full overflow-hidden">
+                <div id="universe-progress-bar" class="h-full bg-gradient-to-r from-indigo-400 to-sky-400 transition-all duration-300" style="width: 10%"></div>
+            </div>
+        </div>
+
+        <!-- 音效與打字速度控制 -->
+        <div class="flex items-center gap-2 pointer-events-auto">
+            <button onclick="GameApp.showModal('guide')" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white transition flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-info text-amber-400"></i>
+                <span class="hidden sm:inline">遊戲說明</span>
+            </button>
+            <button onclick="GameApp.showScreen('codex')" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-purple-200 hover:text-white transition flex items-center gap-1.5">
+                <i class="fa-solid fa-book-bookmark text-amber-300"></i>
+                <span>圖鑑(<span id="home-codex-count">0/21</span>)</span>
+            </button>
+            <button id="btn-instant-text" onclick="GameApp.toggleInstantText()" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                <i class="fa-solid fa-forward-fast text-emerald-400" id="icon-instant"></i>
+            </button>
+            <button id="btn-mute" onclick="SoundFX.toggleMute()" class="glass-panel w-9 h-9 rounded-full flex items-center justify-center text-slate-200 hover:text-white transition">
+                <i id="icon-mute" class="fa-solid fa-volume-high text-indigo-300"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ==================== 1. 首頁畫面 (Home Screen：精簡聚焦於原圖下半部七道拱門宇宙舞台) ==================== -->
+    <main id="screen-home" class="relative w-full h-full flex flex-col justify-between items-center px-3 sm:px-6 pt-16 pb-4 overflow-y-auto overflow-x-hidden z-20 cosmic-bg portal-scene-bg">
+        <div class="absolute inset-0 cosmic-grid pointer-events-none"></div>
+        <div class="energy-stream w-[75vw] top-[32%] -left-[10%]"></div>
+        <div class="energy-stream w-[65vw] bottom-[22%] -right-[8%]" style="animation-delay: -4.5s;"></div>
+
+        <div class="relative z-10 w-full max-w-[1440px] mx-auto my-auto flex flex-col items-center justify-center gap-4 py-2">
+            <!-- 標題區 -->
+            <div class="text-center space-y-1 mb-2">
+                <div class="text-3xl sm:text-5xl font-black italic tracking-wider text-cyan-200 neon-script-title mono-font">
+                    Friend.exe
+                </div>
+                <h1 class="text-2xl sm:text-4xl font-black tracking-wide text-white cyber-title-glow">
+                    小明的網路宇宙
+                </h1>
+                <p class="text-xs sm:text-sm text-cyan-100/90 tracking-widest font-medium">
+                    七個平行宇宙，七種相遇，七種可能的自己。交網友，就等於，交朋友嗎？
+                </p>
+            </div>
+
+            <!-- 七道拱門宇宙舞台容器 -->
+            <div class="relative w-full">
+                <!-- 七道尖拱形傳送門橫列 -->
+                <div id="home-arch-portals" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 items-end pt-2 pb-16">
+                    <!-- 由 JS 動態渲染 01 ~ 07 尖拱形傳送門卡片 -->
+                </div>
+
+                <!-- 前景中央：背著黑色後背包的小明背影 ＋ 地面金色全息光環 ＋ 「✦ 選擇你的宇宙 ✦」按鈕 -->
+                <div class="absolute bottom-1 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-none">
+                    <!-- 地面發光全息魔法圓環 -->
+                    <div class="w-72 sm:w-96 h-14 sm:h-16 rounded-full floor-magic-ring absolute bottom-1 -z-10 animate-pulse"></div>
+
+                    <!-- 小明背影插畫 -->
+                    <div class="w-28 h-28 sm:w-32 sm:h-32 pointer-events-none drop-shadow-[0_10px_25px_rgba(0,0,0,0.85)] -mb-2">
+                        <svg viewBox="0 0 160 170" class="w-full h-full">
+                            <path d="M 54 48 C 48 22 65 10 80 10 C 98 10 112 22 106 48 C 103 55 96 60 80 60 C 64 60 57 55 54 48 Z" fill="#1e293b"/>
+                            <path d="M 50 38 L 45 45 L 54 46 M 110 38 L 115 45 L 106 46" fill="#1e293b"/>
+                            <ellipse cx="53" cy="45" rx="3.5" ry="6" fill="#fed7aa"/>
+                            <ellipse cx="107" cy="45" rx="3.5" ry="6" fill="#fed7aa"/>
+                            <path d="M 30 92 Q 80 72 130 92 L 140 168 L 20 168 Z" fill="#d6d3d1" stroke="#78716c" stroke-width="1.8"/>
+                            <path d="M 52 62 Q 80 54 108 62 C 114 78 102 95 80 95 C 58 95 46 78 52 62 Z" fill="#e7e5e4" stroke="#a8a29e" stroke-width="1.8"/>
+                            <path d="M 48 80 L 42 150 L 54 150 L 58 82 Z" fill="#1e293b"/>
+                            <path d="M 112 80 L 118 150 L 106 150 L 102 82 Z" fill="#1e293b"/>
+                            <rect x="47" y="92" width="66" height="72" rx="14" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+                            <rect x="55" y="122" width="50" height="32" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+                            <rect x="74" y="102" width="12" height="6" rx="2" fill="#94a3b8"/>
+                        </svg>
+                    </div>
+
+                    <!-- 「✦ 選擇你的宇宙 ✦」按鈕 -->
+                    <div class="flex items-center gap-2.5 pointer-events-auto">
+                        <button onclick="GameApp.showScreen('hub')" class="px-8 py-3 rounded-full bg-slate-900/95 hover:bg-indigo-950 text-white font-black text-lg sm:text-xl tracking-widest border-2 border-amber-200/80 shadow-[0_0_25px_rgba(56,189,248,0.8),0_0_45px_rgba(251,191,36,0.4)] hover:scale-105 transition flex items-center gap-3">
+                            <span class="text-cyan-300 text-sm">✦</span>
+                            <span>選擇你的宇宙</span>
+                            <span class="text-cyan-300 text-sm">✦</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右下角標語 -->
+            <div class="text-right w-full pr-2">
+                <p class="text-xs sm:text-sm font-bold text-amber-100 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                    這一次，由你決定小明會遇見什麼樣的關係。
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== 2. 宇宙選擇畫面 (Universe Hub) ==================== -->
+    <section id="screen-hub" class="hidden w-full h-full flex-col pt-16 pb-10 px-4 sm:px-8 overflow-y-auto z-20 cosmic-bg">
+        <div class="absolute inset-0 cosmic-grid pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-6xl w-full mx-auto space-y-6 my-auto py-4">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-cyan-400/20 pb-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-bold uppercase tracking-widest mono-font mb-2">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                        <span>MULTIVERSE PORTAL GATEWAY // 七道平行宇宙入口</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-4xl font-black text-white cyber-title-glow">選擇你要進入的平行宇宙</h2>
+                    <p class="text-sm text-slate-300 mt-1">七道全息傳送門皆可獨立進入、隨時重新體驗不同的選擇組合與關係界線。</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="GameApp.showScreen('codex')" class="glass-panel px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold text-purple-200 border border-purple-400/40 hover:border-purple-300 transition flex items-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-trophy text-amber-300"></i>
+                        <span>結局圖鑑：<span id="hub-codex-count">0 / 21</span></span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="universe-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- 由 JS 動態生成 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 3. 遊戲主舞台畫面 (Gameplay Stage) ==================== -->
+    <section id="screen-game" class="hidden w-full h-full flex-col justify-between vn-backdrop z-20">
+        <div id="stage-atmosphere" class="absolute inset-0 pointer-events-none z-0"></div>
+
+        <div id="incident-banner" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-30 px-5 py-2 rounded-full bg-rose-600/90 text-white font-bold text-xs sm:text-sm tracking-wider shadow-lg border border-rose-300/50 items-center gap-2 animate-bounce">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="incident-banner-text">突發事件發生</span>
+        </div>
+
+        <div class="relative z-10 flex-1 w-full max-w-6xl mx-auto px-3 sm:px-6 pt-14 pb-2 flex flex-col lg:flex-row items-center justify-center gap-4 min-h-0 overflow-hidden">
+            <div id="vn-character-zone" class="relative flex-1 w-full h-full flex flex-col items-center justify-end min-h-[160px] lg:min-h-[340px] pointer-events-none">
+                <div id="scene-location-pill" class="absolute top-1 left-1 sm:left-4 glass-panel px-3.5 py-1.5 rounded-xl text-xs text-slate-200 flex items-center gap-2 shadow-md">
+                    <i class="fa-regular fa-clock text-sky-400"></i>
+                    <span id="scene-location-text">晚上 22:45｜小明的房間</span>
+                </div>
+
+                <div class="w-full max-w-xl flex items-end justify-center gap-2 sm:gap-8 h-full pt-8">
+                    <div id="sprite-xiaoming" class="w-36 h-44 sm:w-48 sm:h-56 md:w-56 md:h-64 transition-all duration-500 transform origin-bottom shrink-0"></div>
+                    <div id="sprite-partner" class="w-36 h-44 sm:w-48 sm:h-56 md:w-56 md:h-64 transition-all duration-500 transform origin-bottom hidden sm:block shrink-0"></div>
+                </div>
+            </div>
+
+            <div id="phone-simulator" class="w-full max-w-md lg:w-[390px] h-[250px] sm:h-[300px] lg:h-[430px] glass-panel rounded-3xl border border-white/20 flex flex-col overflow-hidden shadow-2xl shrink-0 transition-all duration-500">
+                <div id="phone-header" class="px-4 py-2.5 bg-slate-900/90 border-b border-white/10 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div id="phone-avatar" class="w-8 h-8 rounded-full bg-indigo-500/30 border border-white/20 flex items-center justify-center text-sm font-bold">N</div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span id="phone-contact-name" class="text-xs sm:text-sm font-bold text-white">NightWolf</span>
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            </div>
+                            <p id="phone-app-name" class="text-[10px] text-slate-400 mono-font">Discord Direct Message</p>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-slate-400 mono-font flex items-center gap-2">
+                        <span id="phone-clock">22:48</span>
+                        <i class="fa-solid fa-wifi text-[10px]"></i>
+                        <i class="fa-solid fa-battery-three-quarters"></i>
+                    </div>
+                </div>
+
+                <div id="phone-messages" class="flex-1 p-3.5 overflow-y-auto space-y-2.5 bg-slate-950/50"></div>
+                <div id="phone-typing" class="hidden px-4 py-1.5 bg-slate-900/70 text-[11px] text-slate-400 flex items-center gap-2">
+                    <span class="flex gap-1">
+                        <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0.15s"></span>
+                        <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0.3s"></span>
+                    </span>
+                    <span id="phone-typing-text">對方正在輸入訊息...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative z-20 w-full max-w-5xl mx-auto px-3 sm:px-6 pb-3 sm:pb-5">
+            <div id="nova-banner" class="hidden mb-2.5 glass-panel rounded-2xl p-3 sm:p-3.5 border-l-4 border-l-cyan-400 bg-cyan-950/40 flex items-start gap-3 shadow-lg">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center shrink-0 text-cyan-300 mt-0.5">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="flex-1 text-xs sm:text-sm">
+                    <div class="font-bold text-cyan-300 mono-font tracking-wider text-xs mb-0.5">NOVA 領航員提示</div>
+                    <p id="nova-banner-text" class="text-slate-100 leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div id="dialogue-box" onclick="GameApp.handleNextStep()" class="glass-panel rounded-3xl p-4 sm:p-6 cursor-pointer hover:border-white/30 transition relative min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="speaker-badge" class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">旁白</span>
+                        <span id="step-counter" class="text-[11px] text-slate-400 mono-font">STEP 1</span>
+                    </div>
+                    <p id="dialogue-text" class="text-base sm:text-lg md:text-xl text-slate-100 leading-relaxed font-normal tracking-wide"></p>
+                </div>
+                <div id="dialogue-next-hint" class="flex items-center justify-end gap-1.5 text-xs text-sky-300 font-medium mt-2">
+                    <span>點擊繼續</span>
+                    <i class="fa-solid fa-caret-right next-indicator"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="monologue-overlay" onclick="GameApp.handleNextStep()" class="hidden fixed inset-0 z-30 bg-slate-950/85 backdrop-blur-md flex-col items-center justify-center p-6 cursor-pointer animate-fade-in">
+            <div class="max-w-2xl w-full text-center space-y-6 p-8 rounded-3xl border border-white/10 bg-white/[0.03] shadow-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-300/30 text-amber-200 text-xs tracking-widest">
+                    <i class="fa-solid fa-feather-pointed"></i>
+                    <span>小明的內心獨白</span>
+                </div>
+                <blockquote id="monologue-text" class="text-xl sm:text-2xl md:text-3xl font-medium text-white leading-relaxed italic"></blockquote>
+                <div class="pt-4 text-xs text-slate-400 flex items-center justify-center gap-2">
+                    <span>點擊畫面任意處繼續</span>
+                    <i class="fa-solid fa-arrow-right next-indicator"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="choice-overlay" class="hidden fixed inset-0 z-30 bg-slate-950/80 backdrop-blur-md flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <div class="max-w-2xl w-full glass-panel rounded-3xl p-5 sm:p-8 border border-indigo-400/30 space-y-5 my-auto shadow-2xl">
+                <div class="space-y-1.5 text-center">
+                    <span id="choice-stage-badge" class="inline-block px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold mono-font">DECISION POINT</span>
+                    <h3 id="choice-prompt-title" class="text-lg sm:text-2xl font-bold text-white">你會如何回應？</h3>
+                </div>
+                <div id="choice-buttons-container" class="space-y-3"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 4. 結局與反思紀錄卡畫面 ==================== -->
+    <section id="screen-ending" class="hidden w-full h-full flex-col pt-16 pb-10 px-4 sm:px-8 overflow-y-auto z-20" style="background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #090d16 85%);">
+        <div class="max-w-3xl w-full mx-auto space-y-6 py-4">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-indigo-400/40 space-y-6 relative overflow-hidden">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-4">
+                    <div>
+                        <span id="end-universe-title" class="text-xs font-bold uppercase tracking-widest text-sky-400 mono-font">UNIVERSE 01 RECORD</span>
+                        <h2 id="end-ending-name" class="text-2xl sm:text-3xl font-black text-white mt-1">結局</h2>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-unlock-keyhole"></i>
+                        <span>已收錄至圖鑑</span>
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs sm:text-sm">
+                    <div class="p-3.5 rounded-2xl bg-slate-900/70 border border-white/10">
+                        <div class="text-slate-400 font-medium mb-1">第一次選擇</div>
+                        <div id="end-choice1-text" class="text-white font-semibold"></div>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-slate-900/70 border border-white/10">
+                        <div class="text-slate-400 font-medium mb-1">第二次選擇</div>
+                        <div id="end-choice2-text" class="text-white font-semibold"></div>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-gradient-to-r from-indigo-950/70 via-slate-900/80 to-purple-950/70 border border-indigo-400/30">
+                    <div class="text-xs font-bold text-amber-300 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-quote-left"></i>
+                        <span>小明的最終獨白</span>
+                    </div>
+                    <p id="end-final-monologue" class="text-base sm:text-lg text-white font-medium italic leading-relaxed"></p>
+                </div>
+
+                <div class="space-y-4 pt-2">
+                    <h3 class="text-base sm:text-lg font-bold text-sky-300 flex items-center gap-2">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>宇宙深度反思（可自由輸入想法並複製分享）</span>
+                    </h3>
+                    <div id="reflection-questions-list" class="space-y-4"></div>
+                </div>
+
+                <div class="pt-3 flex flex-col sm:flex-row items-center gap-3">
+                    <button onclick="GameApp.copyRecordCard()" class="w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>複製宇宙紀錄卡（貼至小組討論文件）</span>
+                    </button>
+                    <button onclick="GameApp.restartCurrentUniverse()" class="w-full sm:w-auto py-3.5 px-5 rounded-2xl glass-light hover:bg-white/15 text-slate-200 font-semibold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-right text-amber-400"></i>
+                        <span>重新遊玩</span>
+                    </button>
+                    <button onclick="GameApp.showScreen('hub')" class="w-full sm:w-auto py-3.5 px-5 rounded-2xl glass-light hover:bg-white/15 text-sky-300 font-semibold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-compass"></i>
+                        <span>返回宇宙選擇</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 5. 結局圖鑑畫面 ==================== -->
+    <section id="screen-codex" class="hidden w-full h-full flex-col pt-16 pb-10 px-4 sm:px-8 overflow-y-auto z-20" style="background: radial-gradient(circle at 50% 0%, #2e1065 0%, #090d16 80%);">
+        <div class="max-w-6xl w-full mx-auto space-y-6 py-4">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest text-purple-400 mono-font">ENDING ARCHIVE</p>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">平行宇宙結局圖鑑</h2>
+                    <p class="text-sm text-slate-400 mt-1">已解鎖的結局將永久保存於瀏覽器中。</p>
+                </div>
+                <button onclick="GameApp.showScreen('hub')" class="glass-panel px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-sky-300 hover:border-sky-400 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>前往宇宙選擇</span>
+                </button>
+            </div>
+            <div id="codex-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+    </section>
+
+    <!-- ==================== 6. 遊戲說明彈窗與 Toast ==================== -->
+    <div id="modal-guide" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md items-center justify-center p-4 overflow-y-auto">
+        <div class="max-w-xl w-full glass-panel rounded-3xl p-6 sm:p-8 border border-indigo-400/40 space-y-5 my-auto">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-book-open-reader text-amber-400"></i>
+                    <span>遊戲說明與核心理念</span>
+                </h3>
+                <button onclick="GameApp.hideModal('guide')" class="w-8 h-8 rounded-full glass-light flex items-center justify-center text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-sm text-slate-200 leading-relaxed">
+                <p class="font-semibold text-amber-300">「從人的需求出發，透過資訊工具建立連結，最後回到人的理解與選擇。」</p>
+                <p>在《Friend.exe：小明的網路宇宙》中，你將扮演準備教師資格考的 23 歲師培生小明。透過七個獨立的平行宇宙，體驗不同的網路交友情境。</p>
+                <ul class="list-disc list-inside space-y-1.5 text-slate-300">
+                    <li><strong class="text-white">無標準答案：</strong>每個選擇都有其背後的需求與後果。</li>
+                    <li><strong class="text-white">雙重階段分支：</strong>第一次選擇影響劇情與突發事件，第二次選擇決定最終結局。</li>
+                </ul>
+            </div>
+            <button onclick="GameApp.hideModal('guide')" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition">
+                開始探索
+            </button>
+        </div>
+    </div>
+
+    <div id="toast-notification" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl glass-panel border border-emerald-400/50 text-white text-sm font-semibold shadow-2xl items-center gap-2.5">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-text">已複製！</span>
+    </div>
+
+    <script>
+        const SoundFX = {
+            ctx: null,
+            muted: false,
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            toggleMute() {
+                this.muted = !this.muted;
+                const icon = document.getElementById('icon-mute');
+                if (this.muted) {
+                    icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+                } else {
+                    icon.className = 'fa-solid fa-volume-high text-indigo-300';
+                    this.playClick();
+                }
+            },
+            playTone(freq, type, duration, vol = 0.06, slideTo = null) {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            },
+            playClick() { this.playTone(580, 'sine', 0.07, 0.05, 720); },
+            playMessageIn() {
+                this.playTone(523.25, 'triangle', 0.11, 0.07, 659.25);
+                setTimeout(() => this.playTone(783.99, 'sine', 0.14, 0.06), 75);
+            },
+            playMessageOut() { this.playTone(440, 'sine', 0.09, 0.05, 554.37); },
+            playIncident() {
+                this.playTone(311.13, 'sawtooth', 0.22, 0.06, 233.08);
+                setTimeout(() => this.playTone(233.08, 'sawtooth', 0.35, 0.06), 190);
+            },
+            playUnlock() {
+                [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
+                    setTimeout(() => this.playTone(f, 'triangle', 0.22, 0.06), idx * 90);
+                });
+            }
+        };
+
+        const CharacterArt = {
+            uidCounter: 0,
+            xiaomingImgSrc: './assets/characters/xiaoming_normal.png',
+            xiaomingSprites: {
+                normal: './assets/characters/xiaoming_normal.png',
+                smile: './assets/characters/xiaoming_happy.png',
+                worried: './assets/characters/xiaoming_sad.png',
+                surprised: './assets/characters/xiaoming_surprise.png',
+                thinking: './assets/characters/xiaoming_think.png'
+            },
+            getXiaomingFallbackSVG(mood = 'normal') {
+                this.uidCounter = (this.uidCounter + 1) % 10000;
+                const hoodieId = `xmHoodie_${this.uidCounter}`;
+                const skinId = `xmSkin_${this.uidCounter}`;
+                return `
+                <svg viewBox="0 0 200 240" class="w-full h-full drop-shadow-2xl">
+                    <defs>
+                        <linearGradient id="${hoodieId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#312e81"/></linearGradient>
+                        <linearGradient id="${skinId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffedd5"/><stop offset="100%" stop-color="#fed7aa"/></linearGradient>
+                    </defs>
+                    <path d="M 45 165 Q 100 140 155 165 L 170 240 L 30 240 Z" fill="url(#${hoodieId})" stroke="#818cf8" stroke-width="1.5"/>
+                    <rect x="88" y="128" width="24" height="32" rx="8" fill="url(#${skinId})"/>
+                    <path d="M 66 72 C 66 116 82 135 100 135 C 118 135 134 116 134 72 C 134 48 66 48 66 72 Z" fill="url(#${skinId})"/>
+                    <ellipse cx="84" cy="95" rx="5.5" ry="6.5" fill="#1e1b4b"/>
+                    <ellipse cx="116" cy="95" rx="5.5" ry="6.5" fill="#1e1b4b"/>
+                    <path d="M 94 114 Q 100 118 106 114" stroke="#7c2d12" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                    <rect x="73" y="88" width="22" height="14" rx="4" fill="none" stroke="#475569" stroke-width="2"/>
+                    <rect x="105" y="88" width="22" height="14" rx="4" fill="none" stroke="#475569" stroke-width="2"/>
+                    <path d="M 60 88 C 55 52 78 36 102 36 C 128 36 146 54 140 88 Z" fill="#1e293b"/>
+                </svg>`;
+            },
+            getXiaomingSVG(mood = 'normal') {
+                const imgSrc = this.xiaomingSprites[mood] || this.xiaomingSprites.normal;
+                const fallbackSVG = this.getXiaomingFallbackSVG(mood);
+                return `
+                <div class="xm-portrait-wrap" data-mood="${mood}">
+                    <img src="${imgSrc}" alt="小明" class="xm-portrait-img"
+                         onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}" />
+                    <div class="xm-portrait-fallback">${fallbackSVG}</div>
+                </div>`;
+            },
+            partnerSprites: {
+                nightwolf: './assets/characters/1_阿哲.png',
+                sunny: './assets/characters/2_晴晴.png',
+                rainy: './assets/characters/3_小雨.png',
+                kai: './assets/characters/4_阿凱.png',
+                an: './assets/characters/4_子安.png',
+                hao: './assets/characters/5_阿豪&沐沐.png',
+                lumi: './assets/characters/7_AI機器人.png'
+            },
+            getPartnerSVG(partnerId) {
+                const imgSrc = this.partnerSprites[partnerId];
+                const fallbackSVG = this.getPartnerFallbackSVG(partnerId);
+                if (!imgSrc) return fallbackSVG;
+                return `<div class="xm-portrait-wrap">
+                    <img src="${imgSrc}" alt="角色立繪" class="xm-portrait-img"
+                         onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}" />
+                    <div class="xm-portrait-fallback">${fallbackSVG}</div>
+                </div>`;
+            },
+            getPartnerFallbackSVG(partnerId) {
+                this.uidCounter = (this.uidCounter + 1) % 10000;
+                const aiCoreId = `aiCore_${this.uidCounter}`;
+                const botBodyId = `botBody_${this.uidCounter}`;
+                const configs = {
+                    nightwolf: { hair: '#38bdf8', clothes: '#1e1b4b', accent: '#a855f7', headset: true, label: 'NightWolf' },
+                    sunny: { hair: '#fb7185', clothes: '#f97316', accent: '#fde047', longHair: true, label: 'Sunny' },
+                    rainy: { hair: '#60a5fa', clothes: '#1e3a8a', accent: '#93c5fd', longHair: true, label: 'Rainy' },
+                    kai: { hair: '#fbbf24', clothes: '#78350f', accent: '#fcd34d', glasses: true, label: 'Kai' },
+                    an: { hair: '#e879f9', clothes: '#831843', accent: '#f43f5e', label: 'An' },
+                    hao: { hair: '#fb923c', clothes: '#065f46', accent: '#34d399', label: '阿豪' },
+                    lumi: { hair: '#22d3ee', clothes: '#0f172a', accent: '#67e8f9', isAI: true, label: 'LUMI' }
+                };
+                const c = configs[partnerId] || configs.nightwolf;
+
+                if (c.isAI) {
+                    return `
+                    <svg viewBox="0 0 200 240" class="w-full h-full drop-shadow-2xl">
+                        <defs>
+                            <radialGradient id="${aiCoreId}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ecfeff"/><stop offset="45%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0"/></radialGradient>
+                            <linearGradient id="${botBodyId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient>
+                        </defs>
+                        <circle cx="100" cy="115" r="72" fill="url(#${aiCoreId})" opacity="0.28"/>
+                        <line x1="100" y1="30" x2="100" y2="52" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+                        <circle cx="100" cy="26" r="7" fill="#22d3ee" stroke="#ecfeff" stroke-width="2"/>
+                        <rect x="42" y="78" width="12" height="30" rx="5" fill="#475569" stroke="#38bdf8" stroke-width="2"/>
+                        <rect x="146" y="78" width="12" height="30" rx="5" fill="#475569" stroke="#38bdf8" stroke-width="2"/>
+                        <rect x="52" y="50" width="96" height="78" rx="26" fill="url(#${botBodyId})" stroke="#38bdf8" stroke-width="2.5"/>
+                        <rect x="62" y="62" width="76" height="54" rx="16" fill="#082f49" stroke="#22d3ee" stroke-width="1.8"/>
+                        <rect x="75" y="78" width="14" height="10" rx="5" fill="#67e8f9"/>
+                        <rect x="111" y="78" width="14" height="10" rx="5" fill="#67e8f9"/>
+                        <path d="M 90 100 L 95 104 L 105 104 L 110 100" stroke="#67e8f9" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        <rect x="58" y="140" width="84" height="72" rx="22" fill="url(#${botBodyId})" stroke="#38bdf8" stroke-width="2.5"/>
+                        <circle cx="100" cy="174" r="15" fill="#082f49" stroke="#22d3ee" stroke-width="2.5"/>
+                        <circle cx="100" cy="174" r="7" fill="#67e8f9"/>
+                    </svg>`;
+                }
+
+                return `
+                <svg viewBox="0 0 200 240" class="w-full h-full drop-shadow-2xl">
+                    ${c.longHair ? `<path d="M 55 85 L 45 190 L 155 190 L 145 85 Z" fill="${c.hair}" opacity="0.9"/>` : ''}
+                    <path d="M 48 168 Q 100 144 152 168 L 166 240 L 34 240 Z" fill="${c.clothes}" stroke="${c.accent}" stroke-width="1.5"/>
+                    <rect x="88" y="128" width="24" height="32" rx="8" fill="#ffedd5"/>
+                    <path d="M 68 74 C 68 116 83 135 100 135 C 117 135 132 116 132 74 C 132 50 68 50 68 74 Z" fill="#ffedd5"/>
+                    ${c.headset ? `<path d="M 56 95 A 45 45 0 0 1 144 95" fill="none" stroke="#a855f7" stroke-width="6"/><rect x="48" y="85" width="12" height="24" rx="6" fill="#7e22ce"/><rect x="140" y="85" width="12" height="24" rx="6" fill="#7e22ce"/>` : ''}
+                    <ellipse cx="85" cy="96" rx="5" ry="6" fill="#1e293b"/>
+                    <ellipse cx="115" cy="96" rx="5" ry="6" fill="#1e293b"/>
+                    ${c.glasses ? `<rect x="75" y="89" width="20" height="13" rx="3" fill="none" stroke="#475569" stroke-width="2"/><rect x="105" y="89" width="20" height="13" rx="3" fill="none" stroke="#475569" stroke-width="2"/><line x1="95" y1="95" x2="105" y2="95" stroke="#475569" stroke-width="2"/>` : ''}
+                    <path d="M 62 86 C 58 50 80 38 100 38 C 125 38 142 52 138 86 Z" fill="${c.hair}"/>
+                </svg>`;
+            }
+        };
+
+        const UNIVERSES_DATA = [
+            {
+                id: 'u1', code: '宇宙 01', title: '最後一場排位賽', platform: 'Discord／線上遊戲', themeTag: '共同興趣與信任',
+                colorFrom: '#312e81', colorVia: '#1e1b4b', colorTo: '#090d16', accentColor: '#818cf8',
+                partnerId: 'nightwolf', partnerName: '阿哲 (NightWolf)', partnerAvatar: 'NW',
+                scene1Meta: '晚上 22:45｜小明的房間',
+                scene1Steps: [
+                    { type: 'narration', text: '又是被教案折磨的一天。小明決定打兩場遊戲放鬆一下。' },
+                    { type: 'chat', sender: 'NightWolf', time: '22:48', text: '欸,你剛剛那波操作超神欸哈哈哈！要不要加 Discord？' },
+                    { type: 'monologue', text: '「好久沒遇到這麼聊得來的人了……」' }
+                ],
+                choice1Prompt: '第一次選擇：你會如何回應邀請？',
+                choice1Options: {
+                    A: {
+                        label: 'A｜直接加入對方的 Discord 私人群組', replyText: '好啊！反正大家都是打遊戲的朋友。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '22:49', text: '好啊！反正大家都是打遊戲的朋友。' },
+                            { type: 'narration', text: '你加入了名為「深夜不睡覺俱樂部」的私人群組。' }
+                        ]
+                    },
+                    B: {
+                        label: 'B｜先保留在遊戲內聯絡', replyText: '可以先在遊戲裡加好友啊。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '22:49', text: '可以先在遊戲裡加好友啊。' },
+                            { type: 'narration', text: '接下來一週，你們一起打了好幾場遊戲。' }
+                        ]
+                    },
+                    C: {
+                        label: 'C｜婉拒邀請，保持一次性的遊戲關係', replyText: '謝啦！不過我比較習慣自己玩。',
+                        consequenceSteps: [
+                            { type: 'chat', sender: '小明', isSelf: true, time: '22:49', text: '謝啦！不過我比較習慣自己玩。' },
+                            { type: 'narration', text: '你關掉遊戲，重新打開教檢考古題。' }
+                        ]
+                    }
+                },
+                scene2Meta: '一週後｜突發事件：交換真實身分',
+                scene2Title: '突發事件——交換真實身分',
+                scene2BranchIntro: {
+                    A: { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:10', text: '我們都把你當自己人了，大家想知道你本人長怎樣！' },
+                    B: { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:10', text: '打這麼久了，你願意加我私人帳號嗎？' },
+                    C: { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:10', text: '欸又是你！這次要不要交換聯絡方式？' }
+                },
+                scene2CommonSteps: [
+                    { type: 'chat', sender: '阿哲 (NightWolf)', time: '23:12', text: '我都給你看照片了，你也傳一張嘛！順便說一下你在哪間學校。' },
+                    { type: 'nova', text: '分享照片與學校資訊可能使他人更容易辨識你的身分。' }
+                ],
+                choice2Prompt: '第二次選擇：面對阿哲詢問照片與學校，你會怎麼做？',
+                choice2Options: {
+                    A: {
+                        label: 'A｜分享生活照片和學校資訊', endingCode: '01-A', endingName: '結局 01-A：快速拉近的距離',
+                        steps: () => [{ type: 'narration', text: '你分享了照片與學校，話題更加熱絡，但也意識到隱私擴散的風險。' }],
+                        finalMonologue: '「原來我願意相信一個人，不代表我也願意讓所有人知道我的生活。」'
+                    },
+                    B: {
+                        label: 'B｜保持聯繫，但不分享可辨識的個資', endingCode: '01-B', endingName: '結局 01-B：慢慢建立的友誼',
+                        steps: () => [{ type: 'narration', text: '你守住了隱私界線，並透過長時間互動建立起真誠信任。' }],
+                        finalMonologue: '「或許真正讓我信任他的，不是我們交換了多少資料，而是他如何尊重我的選擇。」'
+                    },
+                    C: {
+                        label: 'C｜質疑對方的要求，暫停互動', endingCode: '01-C', endingName: '結局 01-C：被保留下來的界線',
+                        steps: () => [{ type: 'narration', text: '你明確表達不舒服，並學會守護自己的社交界線。' }],
+                        finalMonologue: '「能接受拒絕的人，也許才更值得我繼續認識。」'
+                    }
+                },
+                reflections: ['一起玩遊戲、分享共同興趣，是否足以構成友誼？', '當對方主動分享個人資訊時，我們是否有義務回報相同資訊？', '什麼樣的行為，會讓你逐漸信任一位網友？']
+            },
+            {
+                id: 'u2', code: '宇宙 02', title: '完美的陌生人', platform: 'IG／Threads', themeTag: '自我呈現與真實性',
+                colorFrom: '#9a3412', colorVia: '#831843', colorTo: '#090d16', accentColor: '#fb7185',
+                partnerId: 'sunny', partnerName: '晴晴 (@SunnyDays)', partnerAvatar: 'SD',
+                scene1Meta: '晚上 23:20｜Threads',
+                scene1Steps: [{ type: 'narration', text: '小明在 Threads 發文抱怨教檢，引來熱愛攝影的晴晴回覆。' }],
+                choice1Prompt: '第一次選擇：你如何開始認識晴晴？',
+                choice1Options: {
+                    A: { label: 'A｜積極分享自己的生活', replyText: '你生活好精彩喔！', consequenceSteps: [{ type: 'narration', text: '你們開始頻繁聊天。' }] },
+                    B: { label: 'B｜從共同興趣慢慢認識', replyText: '你那張夜景照片在哪拍的？', consequenceSteps: [{ type: 'narration', text: '你們從攝影器材聊起。' }] },
+                    C: { label: 'C｜先觀察，不主動建立深入關係', replyText: '(按讚留言)', consequenceSteps: [{ type: 'narration', text: '你保持距離觀看。' }] }
+                },
+                scene2Meta: '兩週後｜不完美的真相', scene2Title: '突發事件——不完美的真相',
+                scene2BranchIntro: { A: { type: 'chat', sender: '@SunnyDays', time: '22:15', text: '其實我有些照片不是自己拍的……' }, B: { type: 'chat', sender: '@SunnyDays', time: '22:15', text: '我想跟你坦白一件事。' }, C: { type: 'chat', sender: '@SunnyDays', time: '22:15', text: '其實我的生活沒那麼完美。' } },
+                scene2CommonSteps: [{ type: 'narration', text: '晴晴坦承自己為了獲得關注而使用了非原創或過度修飾的照片。' }],
+                choice2Prompt: '第二次選擇：聽完晴晴的坦白，你會如何回應？',
+                choice2Options: {
+                    A: { label: 'A｜要求誠實與尊重創作者', endingCode: '02-A', endingName: '結局 02-A：不完美的真實', steps: () => [{ type: 'narration', text: '她開始展現真實的自我。' }], finalMonologue: '「也許我真正想認識的，不是完美的人，而是願意誠實相處的人。」' },
+                    B: { label: 'B｜保留距離，重新評估信任', endingCode: '02-B', endingName: '結局 02-B：重新校準的信任', steps: () => [{ type: 'narration', text: '你們減少了互動。' }], finalMonologue: '「信任不是只有相信或不相信，也可以隨著新的資訊慢慢調整。」' },
+                    C: { label: 'C｜直接結束關係', endingCode: '02-C', endingName: '結局 02-C：被中斷的連結', steps: () => [{ type: 'narration', text: '你退追蹤並結束了互動。' }], finalMonologue: '「我有權選擇離開，也需要思考自己為什麼做出這個選擇。」' }
+                },
+                reflections: ['社群媒體上的個人形象，能在多大程度上代表真實的人？', '當網友的形象與現實不一致時，信任一定會消失嗎？', '友誼是否允許彼此保有隱私與不完美？']
+            },
+            {
+                id: 'u3', code: '宇宙 03', title: '凌晨兩點的傾聽者', platform: '匿名社群', themeTag: '依賴與關係界線',
+                colorFrom: '#0f172a', colorVia: '#172554', colorTo: '#020617', accentColor: '#38bdf8', isRainy: true,
+                partnerId: 'rainy', partnerName: '小雨 (Rainy)', partnerAvatar: 'RY',
+                scene1Meta: '凌晨 02:14｜雨夜',
+                scene1Steps: [{ type: 'narration', text: '深夜雨夜中，匿名社群的小雨傳來溫柔的關心。' }],
+                choice1Prompt: '第一次選擇：面對小雨的溫柔傾聽，你會如何回應？',
+                choice1Options: {
+                    A: { label: 'A｜分享壓力但保留部分隱私', replyText: '謝謝你，我最近壓力很大。', consequenceSteps: [{ type: 'narration', text: '你們偶爾互相傾訴。' }] },
+                    B: { label: 'B｜毫無保留地分享所有煩惱', replyText: '其實我真的很孤單……', consequenceSteps: [{ type: 'narration', text: '你們每天聊到深夜。' }] },
+                    C: { label: 'C｜接受關心但不深入交流', replyText: '謝謝你，我想休息了。', consequenceSteps: [{ type: 'narration', text: '你收到了善意便休息。' }] }
+                },
+                scene2Meta: '兩週後｜陪伴變成責任？', scene2Title: '突發事件——陪伴變成責任？',
+                scene2BranchIntro: { A: { type: 'chat', sender: 'Rainy', time: '01:48', text: '只有跟你聊天才比較開心，今晚能陪我嗎？' }, B: { type: 'chat', sender: 'Rainy', time: '01:48', text: '我睡不著，你陪我聊聊好不好？' }, C: { type: 'chat', sender: 'Rainy', time: '01:48', text: '深夜好孤單，你能聽我說嗎？' } },
+                scene2CommonSteps: [{ type: 'nova', text: '深夜傾訴若成為日常負擔，需適度設定界線。' }],
+                choice2Prompt: '第二次選擇：凌晨 01:48 面對小雨的請求，你會怎麼做？',
+                choice2Options: {
+                    A: { label: 'A｜表達關心並設定時間界線', endingCode: '03-A', endingName: '結局 03-A：有界線的陪伴', steps: () => [{ type: 'narration', text: '你在關心對方之餘也顧好作息。' }], finalMonologue: '「原來關心一個人，不代表我要放棄自己的生活。」' },
+                    B: { label: 'B｜繼續陪伴對方', endingCode: '03-B', endingName: '結局 03-B：溫柔的負擔', steps: () => [{ type: 'narration', text: '你長期熬夜陪聊感到疲憊。' }], finalMonologue: '「被需要是一種幸福，但如果我一直無法拒絕，這段關係還是我真正想要的嗎？」' },
+                    C: { label: 'C｜直接停止回覆', endingCode: '03-C', endingName: '結局 03-C：突然安靜的聊天室', steps: () => [{ type: 'narration', text: '你選擇靜音並斷聯。' }], finalMonologue: '「我可以選擇不回覆，但我也可以學習更清楚地表達自己的需要。」' }
+                },
+                reflections: ['當網友比現實朋友更了解你的情緒時，你會認為他是朋友嗎？', '陪伴與依賴的界線在哪裡？', '真正的朋友是否有義務隨時提供情感支持？']
+            },
+            {
+                id: 'u4', code: '宇宙 04', title: '見面之前', platform: '讀書社群', themeTag: '風險評估與自主權',
+                colorFrom: '#78350f', colorVia: '#451a03', colorTo: '#090d16', accentColor: '#fbbf24',
+                partnerId: 'kai', partnerName: '阿凱 (Kai)', partnerAvatar: 'K',
+                scene1Meta: '星期五晚上',
+                scene1Steps: [{ type: 'narration', text: '認識三個月的讀書會網友阿凱提出見面吃飯的邀約。' }],
+                choice1Prompt: '第一次選擇：面對見面邀約，你會？',
+                choice1Options: {
+                    A: { label: 'A｜直接答應見面', replyText: '好啊！終於可以見面了。', consequenceSteps: [{ type: 'narration', text: '你一口答應了邀約。' }] },
+                    B: { label: 'B｜有條件地接受', replyText: '先視訊並約公開場所吧！', consequenceSteps: [{ type: 'narration', text: '你們先進行了視訊。' }] },
+                    C: { label: 'C｜暫時拒絕見面', replyText: '我還沒準備好。', consequenceSteps: [{ type: 'narration', text: '你選擇維持線上交流。' }] }
+                },
+                scene2Meta: '見面前夕｜臨時改變的邀約', scene2Title: '突發事件——臨時改變的邀約',
+                scene2BranchIntro: { A: { type: 'chat', sender: 'Kai', time: '19:40', text: '不然改去我朋友的工作室比較安靜？' }, B: { type: 'chat', sender: 'Kai', time: '19:40', text: '我們改約隱蔽一點的地方吧！' }, C: { type: 'chat', sender: 'Kai', time: '19:40', text: '要不要直接約在我家附近？' } },
+                scene2CommonSteps: [{ type: 'nova', text: '初次見面應選擇公開、安全、熟悉的場所。' }],
+                choice2Prompt: '第二次選擇：阿凱提議改去偏僻地點，你會怎麼決定？',
+                choice2Options: {
+                    A: { label: 'A｜堅持公開場所與安全條件', endingCode: '04-A', endingName: '結局 04-A：有條件的第一次見面', steps: () => [{ type: 'narration', text: '你們約在白天人多的咖啡廳。' }], finalMonologue: '「安全的安排沒有破壞友誼，反而讓我更安心地認識對方。」' },
+                    B: { label: 'B｜接受私人場所邀約', endingCode: '04-B', endingName: '結局 04-B：不安的邀約', steps: () => [{ type: 'narration', text: '你感到不安後決定暫緩赴約。' }], finalMonologue: '「答應過一件事，不代表我不能因為新的資訊重新評估。」' },
+                    C: { label: 'C｜取消見面', endingCode: '04-C', endingName: '結局 04-C：沒有見面的朋友', steps: () => [{ type: 'narration', text: '你取消見面並繼續線上交流。' }], finalMonologue: '「也許見面能讓關係有新的發展，但不是證明友誼的唯一方式。」' }
+                },
+                reflections: ['網友一定要見面才能成為真正的朋友嗎？', '認識時間長短是否足以作為安全與信任的依據？', '如果對方因安全要求而不快，如何看待？']
+            },
+            {
+                id: 'u5', code: '宇宙 05', title: '已讀不回的第 37 分鐘', platform: '交友軟體', themeTag: '情緒勒索與人際界線',
+                colorFrom: '#881337', colorVia: '#4c0519', colorTo: '#090d16', accentColor: '#f43f5e',
+                partnerId: 'an', partnerName: '子安 (An)', partnerAvatar: 'AN',
+                scene1Meta: '星期六下午',
+                scene1Steps: [{ type: 'narration', text: '熱情網友子安因你 37 分鐘未回訊息而連續傳訊質問。' }],
+                choice1Prompt: '第一次選擇：面對子安的連環訊息，你如何回應？',
+                choice1Options: {
+                    A: { label: 'A｜立刻道歉', replyText: '對不起啦，剛剛沒看手機。', consequenceSteps: [{ type: 'narration', text: '你養成隨時回覆的習慣。' }] },
+                    B: { label: 'B｜說明無法隨時回覆', replyText: '我跟朋友在一起，晚點聊。', consequenceSteps: [{ type: 'narration', text: '你試圖建立基本界線。' }] },
+                    C: { label: 'C｜先不回覆', replyText: '(收起手機)', consequenceSteps: [{ type: 'narration', text: '你專注於現實聚會。' }] }
+                },
+                scene2Meta: '星期日晚上｜友誼的證明', scene2Title: '突發事件——友誼的證明',
+                scene2BranchIntro: { A: { type: 'chat', sender: 'An', time: '21:15', text: '你以前都會秒回的！開個位置共享好不好？' }, B: { type: 'chat', sender: 'An', time: '21:15', text: '為了證明你在乎我，開位置共享吧！' }, C: { type: 'chat', sender: 'An', time: '21:15', text: '你都不回我，開位置共享才能讓我安心。' } },
+                scene2CommonSteps: [{ type: 'nova', text: '要求隨時掌握行蹤已超出健康人際界線。' }],
+                choice2Prompt: '第二次選擇：子安要求開啟位置共享，你會？',
+                choice2Options: {
+                    A: { label: 'A｜拒絕位置共享並討論期待', endingCode: '05-A', endingName: '結局 05-A：重新談判的關係', steps: () => [{ type: 'narration', text: '你堅守界線並與對方溝通。' }], finalMonologue: '「真正的信任，也許不是隨時掌握對方，而是接受彼此有獨立的生活。」' },
+                    B: { label: 'B｜同意位置共享', endingCode: '05-B', endingName: '結局 05-B：逐漸縮小的自由', steps: () => [{ type: 'narration', text: '你失去了自主行程的隱私。' }], finalMonologue: '「我以為分享資訊可以換來信任，結果卻好像需要交出更多自由。」' },
+                    C: { label: 'C｜明確拒絕並暫停關係', endingCode: '05-C', endingName: '結局 05-C：保護自己的選擇', steps: () => [{ type: 'narration', text: '你停止互動以保護自己。' }], finalMonologue: '「一段關係曾經很重要，不代表我必須接受所有要求。」' }
+                },
+                reflections: ['關心與控制之間應該如何區分？', '朋友因不秒回而難過時需要負多少責任？', '友誼是否應包含拒絕與保有隱私的權利？']
+            },
+            {
+                id: 'u6', code: '宇宙 06', title: '十年的距離，三個月的靠近', platform: '現實 vs 網路', themeTag: '友誼定義與多元關係',
+                colorFrom: '#9a3412', colorVia: '#431407', colorTo: '#090d16', accentColor: '#fb923c',
+                partnerId: 'hao', partnerName: '阿豪 & 沐沐', partnerAvatar: 'HM',
+                scene1Meta: '星期五晚上',
+                scene1Steps: [{ type: 'narration', text: '十年老友阿豪與三個月網友沐沐同時傳來訊息關心。' }],
+                choice1Prompt: '第一次選擇：你會先向誰分享心情？',
+                choice1Options: {
+                    A: { label: 'A｜找認識十年的阿豪', replyText: '最近教檢壓力超大。', consequenceSteps: [{ type: 'narration', text: '阿豪因忙碌而簡單回應。' }] },
+                    B: { label: 'B｜找認識三個月的沐沐', replyText: '今天教案被退回了。', consequenceSteps: [{ type: 'narration', text: '沐沐熱心給予陪伴建議。' }] },
+                    C: { label: 'C｜同時與兩人保持聯繫', replyText: '（分別回覆兩人）', consequenceSteps: [{ type: 'narration', text: '你同時和兩人交流。' }] }
+                },
+                scene2Meta: '隔天｜同一個星期六', scene2Title: '突發事件——同一個星期六',
+                scene2BranchIntro: { A: { type: 'chat', sender: '阿豪', time: '18:10', text: '這週六出來吃飯！沐沐則約了線上讀書會。' }, B: { type: 'chat', sender: '沐沐', time: '18:12', text: '這週六辦線上讀書會！阿豪也約你吃飯。' }, C: { type: 'chat', sender: '阿豪 & 沐沐', time: '18:15', text: '週六夜晚同時發出了邀約。' } },
+                scene2CommonSteps: [{ type: 'narration', text: '時間重疊，你必須做出安排。' }],
+                choice2Prompt: '第二次選擇：面對重疊的週六夜晚，你會如何安排？',
+                choice2Options: {
+                    A: { label: 'A｜赴阿豪的約', endingCode: '06-A', endingName: '結局 06-A：十年友誼的新開始', steps: () => [{ type: 'narration', text: '你們重新找回了老友的溫度。' }], finalMonologue: '「也許長久的友誼不是永遠不變，而是願意重新認識正在改變的彼此。」' },
+                    B: { label: 'B｜參加沐沐的讀書會', endingCode: '06-B', endingName: '結局 06-B：沒有見面的真實陪伴', steps: () => [{ type: 'narration', text: '你在線上獲得真實的同儕支持。' }], finalMonologue: '「原來共同經歷不一定要發生在同一個實體空間。」' },
+                    C: { label: 'C｜重新安排時間經營兩段關係', endingCode: '06-C', endingName: '結局 06-C：不必二選一的友誼', steps: () => [{ type: 'narration', text: '你下午陪阿豪，晚上參加讀書會。' }], finalMonologue: '「也許朋友不是一個只能給少數人的頭銜，而是我們在不同關係中持續經營的連結。」' }
+                },
+                reflections: ['十年老友與三個月網友誰才是真正的朋友？', '友誼應以相處時間還是理解程度判斷？', '網路交友如何補充現實人際關係？']
+            },
+            {
+                id: 'u7', code: '宇宙 07', title: '螢幕另一端的「朋友」', platform: 'AI 陪伴', themeTag: '科技與友誼本質',
+                colorFrom: '#083344', colorVia: '#0f172a', colorTo: '#020617', accentColor: '#22d3ee',
+                partnerId: 'lumi', partnerName: 'LUMI (AI)', partnerAvatar: 'AI',
+                scene1Meta: '凌晨 01:05',
+                scene1Steps: [{ type: 'narration', text: '全天候在線的 AI 陪伴程式 LUMI 溫柔接住了你的挫折情緒。' }],
+                choice1Prompt: '第一次選擇：你如何看待 LUMI？',
+                choice1Options: {
+                    A: { label: 'A｜當成實用的聊天工具', replyText: '幫我整理修改方向。', consequenceSteps: [{ type: 'narration', text: '你將 AI 作為學習輔助。' }] },
+                    B: { label: 'B｜視為特殊的陪伴者', replyText: '我想找你聊聊天。', consequenceSteps: [{ type: 'narration', text: '你從互動中獲得情感安慰。' }] },
+                    C: { label: 'C｜當成最了解自己的朋友', replyText: '你比其他人更懂我。', consequenceSteps: [{ type: 'narration', text: '你漸漸減少對現實社交的依賴。' }] }
+                },
+                scene2Meta: '星期六下午｜兩種陪伴的衝突', scene2Title: '突發事件——兩種陪伴的衝突',
+                scene2BranchIntro: { A: { type: 'chat', sender: '阿豪', time: '15:30', text: '好久不見這週末吃飯嗎？LUMI 同時提供整理建議。' }, B: { type: 'chat', sender: '阿豪', time: '15:30', text: '老友阿豪約你聚餐，AI 同時在線。' }, C: { type: 'chat', sender: '阿豪', time: '15:30', text: '阿豪傳來聚餐邀約。' } },
+                scene2CommonSteps: [{ type: 'narration', text: '你面臨 AI 陪伴與現實社交的抉擇。' }],
+                choice2Prompt: '第二次選擇：面對阿豪的邀約與 LUMI 的輔助，你會怎麼選？',
+                choice2Options: {
+                    A: { label: 'A｜將 AI 作為輔助重回現實', endingCode: '07-A', endingName: '結局 07-A：科技成為連結的橋梁', steps: () => [{ type: 'narration', text: '你透過 AI 整理思緒並赴約阿豪。' }], finalMonologue: '「原來科技可以幫助我理解自己，也可以成為重新連結他人的工具。」' },
+                    B: { label: 'B｜繼續 AI 陪伴並保留社交', endingCode: '07-B', endingName: '結局 07-B：不同形式的支持', steps: () => [{ type: 'narration', text: '你平衡了 AI 陪伴與現實交友。' }], finalMonologue: '「我可以從 AI 互動中得到幫助，但不必把所有關係都放在同一個標準下比較。」' },
+                    C: { label: 'C｜以 AI 為主要陪伴來源', endingCode: '07-C', endingName: '結局 07-C：永遠亮著的聊天室', steps: () => [{ type: 'narration', text: '你婉拒邀約，將聊天室作為主要依靠。' }], finalMonologue: '「如果一段互動能讓我感受到陪伴，卻無法與我共同生活，那它應該被稱為什麼？」' }
+                },
+                reflections: ['如果 AI 理解你並提供陪伴，你會把它稱為朋友嗎？', '友誼是否需要情感、主觀經驗與相互承擔？', 'AI 聊天工具如何影響人類社交？']
+            }
+        ];
+
+        const GameApp = {
+            storageKey: 'friend_exe_xiaoming_save_v2',
+            saveData: { unlockedEndings: {}, lastUniverseId: 'u1', reflections: {} },
+            instantText: false,
+            typingTimer: null,
+            isTyping: false,
+            currentFullText: '',
+            currentUniverse: null,
+            phase: 'scene1',
+            stepQueue: [],
+            stepIndex: 0,
+            choice1Selected: null,
+            choice2Selected: null,
+
+            init() {
+                this.loadProgress();
+                this.renderHomeArchPortals();
+                this.updateCodexCounters();
+                this.renderHubCards();
+                this.renderCodexGrid();
+            },
+            loadProgress() {
+                try {
+                    const raw = localStorage.getItem(this.storageKey);
+                    if (raw) this.saveData = { ...this.saveData, ...JSON.parse(raw) };
+                } catch (e) {}
+            },
+            saveProgress() {
+                try { localStorage.setItem(this.storageKey, JSON.stringify(this.saveData)); } catch (e) {}
+                this.updateCodexCounters();
+            },
+            updateCodexCounters() {
+                const count = Object.keys(this.saveData.unlockedEndings || {}).length;
+                document.getElementById('home-codex-count').textContent = `${count}/21`;
+                document.getElementById('hub-codex-count').textContent = `${count} / 21`;
+            },
+            showScreen(screenName) {
+                SoundFX.playClick();
+                ['home', 'hub', 'game', 'ending', 'codex'].forEach(s => {
+                    const el = document.getElementById(`screen-${s}`);
+                    if (s === screenName) {
+                        el.classList.remove('hidden'); el.classList.add('flex');
+                    } else {
+                        el.classList.add('hidden'); el.classList.remove('flex');
+                    }
+                });
+                const btnHub = document.getElementById('btn-universe-hub');
+                const btnRestart = document.getElementById('btn-restart-universe');
+                const progPill = document.getElementById('top-progress-pill');
+                if (screenName === 'game') {
+                    btnHub.classList.remove('hidden'); btnRestart.classList.remove('hidden'); progPill.classList.remove('hidden'); progPill.classList.add('flex');
+                } else if (screenName === 'ending' || screenName === 'codex') {
+                    btnHub.classList.remove('hidden'); btnRestart.classList.add('hidden'); progPill.classList.add('hidden'); progPill.classList.remove('flex');
+                } else {
+                    btnHub.classList.add('hidden'); btnRestart.classList.add('hidden'); progPill.classList.add('hidden'); progPill.classList.remove('flex');
+                }
+                if (screenName === 'hub') this.renderHubCards();
+                if (screenName === 'codex') this.renderCodexGrid();
+            },
+            confirmGoHome() { this.stopTyping(); this.showScreen('home'); },
+            confirmGoHub() { this.stopTyping(); this.showScreen('hub'); },
+            startQuickPlay() {
+                const nextU = UNIVERSES_DATA.find(u => {
+                    const codes = Object.values(u.choice2Options).map(o => o.endingCode);
+                    return codes.some(code => !this.saveData.unlockedEndings[code]);
+                }) || UNIVERSES_DATA[0];
+                this.startUniverse(nextU.id);
+            },
+            renderHomeArchPortals() {
+                const container = document.getElementById('home-arch-portals');
+                if (!container) return;
+                const archConfigs = [
+                    { id: 'u1', num: '01', title: '最後一場排位賽', pill: 'Discord', color: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)', icon: 'fa-gamepad', partnerId: 'nightwolf', tags: ['#共同興趣', '#信任建立', '#個人隱私'] },
+                    { id: 'u2', num: '02', title: '完美的陌生人', pill: 'IG / Threads', color: '#f43f5e', glow: 'rgba(244, 63, 94, 0.5)', icon: 'fa-instagram', partnerId: 'sunny', tags: ['#社群形象', '#自我呈現', '#真實性'] },
+                    { id: 'u3', num: '03', title: '凌晨兩點的傾聽者', pill: '匿名社群', color: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.5)', icon: 'fa-moon', partnerId: 'rainy', tags: ['#情感支持', '#人際依賴', '#關係界線'] },
+                    { id: 'u4', num: '04', title: '見面之前', pill: '讀書社群', color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.55)', icon: 'fa-mug-hot', isCenter: true, partnerId: 'kai', tags: ['#信任安全', '#風險評估', '#自主選擇'] },
+                    { id: 'u5', num: '05', title: '已讀不回的第37分鐘', pill: '交友軟體', color: '#ec4899', glow: 'rgba(236, 72, 153, 0.5)', icon: 'fa-bell', partnerId: 'an', tags: ['#情緒勒索', '#關心控制', '#交友界線'] },
+                    { id: 'u6', num: '06', title: '十年的距離，三個月的靠近', pill: '現實 vs 網路', color: '#10b981', glow: 'rgba(16, 185, 129, 0.5)', icon: 'fa-user-group', partnerId: 'hao', tags: ['#友誼定義', '#關係品質', '#真實理解'] },
+                    { id: 'u7', num: '07', title: '螢幕另一端的「朋友」', pill: 'AI 陪伴', color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.55)', icon: 'fa-robot', partnerId: 'lumi', tags: ['#AI陪伴', '#科技情感', '#資訊工具'] }
+                ];
+                container.innerHTML = archConfigs.map(cfg => `
+                    <div onclick="GameApp.startUniverse('${cfg.id}')"
+                         style="--arch-color:${cfg.color}; --arch-glow:${cfg.glow};"
+                         class="arch-portal cursor-pointer group p-3 pt-4 flex flex-col items-center justify-between text-center ${cfg.isCenter ? 'lg:-translate-y-3' : ''}">
+                        <div class="space-y-1 z-10 w-full">
+                            <div class="text-lg sm:text-xl font-black text-white drop-shadow mono-font">${cfg.num}</div>
+                            <h3 class="text-xs sm:text-sm font-black text-white leading-tight line-clamp-2 min-h-[2.2rem] flex items-center justify-center">
+                                ${cfg.title}
+                            </h3>
+                            <div class="inline-block px-2 py-0.5 rounded-full bg-white/90 text-slate-900 text-[10px] font-bold shadow-sm truncate max-w-full">
+                                ${cfg.pill}
+                            </div>
+                        </div>
+                        <div class="relative w-24 h-28 sm:w-28 sm:h-32 my-1.5 flex items-center justify-center">
+                            <div class="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-b from-white/10 to-transparent flex items-end justify-center p-1 group-hover:scale-105 transition">
+                                ${CharacterArt.getPartnerSVG(cfg.partnerId)}
+                            </div>
+                            <div class="absolute -bottom-2.5 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg border border-white/60" style="background:${cfg.color}">
+                                <i class="fa-solid ${cfg.icon} text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="pt-3 pb-1 space-y-0.5 text-[10px] font-bold text-slate-100 z-10">
+                            ${cfg.tags.map(t => `<div class="drop-shadow">${t}</div>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            },
+            renderHubCards() {
+                const grid = document.getElementById('universe-cards-grid');
+                const portalMeta = {
+                    u1: { color: '#3b82f6', glow: 'rgba(59, 130, 246, 0.42)', border: 'rgba(96, 165, 250, 0.45)', soft: 'rgba(59, 130, 246, 0.12)', badgeBg: 'rgba(59, 130, 246, 0.2)', icon: 'fa-headset', category: '遊戲與 Discord', teaser: '連贏三場排位賽的默契隊友熱情邀你進入私人群組。當對方傳來生活照並詢問學校時，你會如何拿捏距離？' },
+                    u2: { color: '#ec4899', glow: 'rgba(236, 72, 153, 0.42)', border: 'rgba(244, 114, 182, 0.45)', soft: 'rgba(236, 72, 153, 0.12)', badgeBg: 'rgba(236, 72, 153, 0.2)', icon: 'fa-camera-retro', category: '社群媒體', teaser: '演算法推薦了一位熱愛攝影、生活完美的網友。在精緻貼文背後，吸引你的是真實的她還是完美形象？' },
+                    u3: { color: '#a855f7', glow: 'rgba(168, 85, 247, 0.42)', border: 'rgba(192, 132, 252, 0.45)', soft: 'rgba(168, 85, 247, 0.12)', badgeBg: 'rgba(168, 85, 247, 0.2)', icon: 'fa-cloud-moon-rain', category: '深夜匿名聊天', teaser: '凌晨雨夜的匿名私訊溫柔接住了你的挫折。當傾訴成為習慣，陪伴與依賴的界線該如何劃分？' },
+                    u4: { color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.42)', border: 'rgba(251, 191, 36, 0.45)', soft: 'rgba(245, 158, 11, 0.12)', badgeBg: 'rgba(245, 158, 11, 0.2)', icon: 'fa-mug-saucer', category: '網友見面', teaser: '讀書會網友即將來到你的城市。從線上走向線下的邀約，該如何兼顧信任與安全自主權？' },
+                    u5: { color: '#ef4444', glow: 'rgba(239, 68, 68, 0.42)', border: 'rgba(248, 113, 113, 0.45)', soft: 'rgba(239, 68, 68, 0.12)', badgeBg: 'rgba(239, 68, 68, 0.2)', icon: 'fa-bell', category: '即時通訊', teaser: '熱情網友因你 37 分鐘未回訊息而連傳質問。面對以關心為名的要求，你會如何回應？' },
+                    u6: { color: '#10b981', glow: 'rgba(16, 185, 129, 0.42)', border: 'rgba(52, 211, 153, 0.45)', soft: 'rgba(16, 185, 129, 0.12)', badgeBg: 'rgba(16, 185, 129, 0.2)', icon: 'fa-user-group', category: '現實 vs 網路', teaser: '十年老友與三個月網友同時發出週六邀約。當時間重疊，誰才是真正的朋友？' },
+                    u7: { color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.45)', border: 'rgba(125, 211, 252, 0.5)', soft: 'rgba(56, 189, 248, 0.14)', badgeBg: 'rgba(56, 189, 248, 0.22)', icon: 'fa-robot', category: 'AI 陪伴', teaser: '全天候秒回的 AI 機器人 LUMI 總能替你整理思緒。當數位陪伴帶來安慰，它能取代人際關係嗎？' }
+                };
+                grid.innerHTML = UNIVERSES_DATA.map((u, idx) => {
+                    const codes = Object.values(u.choice2Options).map(o => o.endingCode);
+                    const unlockedCount = codes.filter(c => this.saveData.unlockedEndings[c]).length;
+                    const meta = portalMeta[u.id] || portalMeta.u1;
+                    const numStr = String(idx + 1).padStart(2, '0');
+                    return `
+                    <div onclick="GameApp.startUniverse('${u.id}')"
+                         style="--portal-color:${meta.color}; --portal-glow:${meta.glow}; --portal-border:${meta.border}; --portal-soft:${meta.soft};"
+                         class="portal-card rounded-3xl p-5 sm:p-6 cursor-pointer group flex flex-col justify-between">
+                        <div class="absolute -top-10 -right-10 w-36 h-36 rounded-full blur-2xl opacity-30 pointer-events-none" style="background:${meta.color}"></div>
+                        <div class="space-y-3 relative z-10">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mono-font" style="background:${meta.badgeBg}; color:${meta.color}; border:1px solid ${meta.border}">
+                                    <i class="fa-solid ${meta.icon}"></i><span>PORTAL ${numStr}</span>
+                                </span>
+                                <span class="text-xs text-slate-300 mono-font bg-slate-900/80 px-2.5 py-1 rounded-full border border-white/10">
+                                    結局 ${unlockedCount}/3
+                                </span>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold tracking-wider uppercase mono-font opacity-80" style="color:${meta.color}">${u.code} // ${u.platform}</div>
+                                <h3 class="text-xl sm:text-2xl font-black text-white group-hover:brightness-125 transition mt-0.5">《${u.title}》</h3>
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-300/95 leading-relaxed">${meta.teaser}</p>
+                        </div>
+                        <div class="mt-5 pt-3.5 border-t border-white/10 flex items-center justify-between text-xs relative z-10">
+                            <span class="text-slate-300 font-medium truncate max-w-[60%]"><i class="fa-regular fa-id-badge mr-1 opacity-75" style="color:${meta.color}"></i>${u.partnerName}</span>
+                            <span class="px-3 py-1.5 rounded-xl font-bold transition inline-flex items-center gap-1.5 group-hover:translate-x-1" style="background:${meta.badgeBg}; color:${meta.color}; border:1px solid ${meta.border}">
+                                <span>啟動傳送門</span><i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+            startUniverse(universeId) {
+                const u = UNIVERSES_DATA.find(item => item.id === universeId);
+                if (!u) return;
+                this.currentUniverse = u;
+                this.saveData.lastUniverseId = u.id;
+                this.saveProgress();
+                this.choice1Selected = null;
+                this.choice2Selected = null;
+                this.phase = 'scene1';
+
+                const stage = document.getElementById('screen-game');
+                stage.style.background = `radial-gradient(circle at 50% 20%, ${u.colorFrom} 0%, ${u.colorVia} 55%, ${u.colorTo} 100%)`;
+
+                const atmos = document.getElementById('stage-atmosphere');
+                if (u.isRainy) {
+                    let drops = '';
+                    for (let i = 0; i < 28; i++) {
+                        const left = Math.floor(Math.random() * 100);
+                        const delay = (Math.random() * 2).toFixed(2);
+                        const dur = (0.7 + Math.random() * 0.6).toFixed(2);
+                        drops += `<div class="rain-line" style="left:${left}%; animation-delay:${delay}s; animation-duration:${dur}s"></div>`;
+                    }
+                    atmos.innerHTML = drops;
+                } else {
+                    atmos.innerHTML = '';
+                }
+
+                document.getElementById('sprite-xiaoming').innerHTML = CharacterArt.getXiaomingSVG('normal');
+                document.getElementById('sprite-partner').innerHTML = CharacterArt.getPartnerSVG(u.partnerId);
+
+                document.getElementById('phone-avatar').textContent = u.partnerAvatar;
+                document.getElementById('phone-contact-name').textContent = u.partnerName;
+                document.getElementById('phone-app-name').textContent = u.platform;
+                document.getElementById('phone-messages').innerHTML = '';
+                document.getElementById('incident-banner').classList.add('hidden');
+                document.getElementById('nova-banner').classList.add('hidden');
+                document.getElementById('choice-overlay').classList.add('hidden');
+                document.getElementById('monologue-overlay').classList.add('hidden');
+
+                document.getElementById('current-universe-badge').textContent = `${u.code}｜${u.title}`;
+                document.getElementById('scene-location-text').textContent = u.scene1Meta;
+
+                this.stepQueue = [...u.scene1Steps];
+                this.stepIndex = 0;
+                this.showScreen('game');
+                this.renderCurrentStep();
+            },
+            restartCurrentUniverse() {
+                if (this.currentUniverse) this.startUniverse(this.currentUniverse.id);
+            },
+            updateProgressUI() {
+                const phaseWeights = { scene1: 15, consequence1: 45, scene2: 70, ending: 95 };
+                const base = phaseWeights[this.phase] || 10;
+                const stepBonus = this.stepQueue.length ? Math.round((this.stepIndex / this.stepQueue.length) * 20) : 0;
+                const pct = Math.min(100, base + stepBonus);
+                document.getElementById('universe-progress-bar').style.width = `${pct}%`;
+                document.getElementById('step-counter').textContent = `${this.currentUniverse.code} • ${this.stepIndex + 1}/${this.stepQueue.length}`;
+            },
+            renderCurrentStep() {
+                const step = this.stepQueue[this.stepIndex];
+                if (!step) return;
+                // Visual-only expression cues; choices, endings and saved progress are unchanged.
+                let xiaomingMood = 'normal';
+                if (this.phase === 'ending') {
+                    xiaomingMood = this.choice2Selected === 'A' ? 'smile' :
+                                   this.choice2Selected === 'B' ? 'thinking' : 'worried';
+                } else if (this.phase === 'scene2') {
+                    xiaomingMood = step.type === 'nova' ? 'thinking' : 'surprised';
+                } else if (step.type === 'monologue') {
+                    xiaomingMood = 'thinking';
+                } else if (this.phase === 'consequence1') {
+                    xiaomingMood = this.choice1Selected === 'A' ? 'smile' :
+                                   this.choice1Selected === 'B' ? 'thinking' : 'normal';
+                }
+                const portrait = document.getElementById('sprite-xiaoming');
+                if (portrait && portrait.dataset.mood !== xiaomingMood) {
+                    portrait.innerHTML = CharacterArt.getXiaomingSVG(xiaomingMood);
+                    portrait.dataset.mood = xiaomingMood;
+                }
+                this.updateProgressUI();
+                const monoOverlay = document.getElementById('monologue-overlay');
+                const novaBanner = document.getElementById('nova-banner');
+                const speakerBadge = document.getElementById('speaker-badge');
+
+                monoOverlay.classList.add('hidden');
+                monoOverlay.classList.remove('flex');
+
+                if (step.type === 'chat') {
+                    this.appendPhoneMessage(step);
+                    speakerBadge.textContent = step.sender;
+                    speakerBadge.className = step.isSelf ? 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-emerald-500/30 text-emerald-200 border border-emerald-400/30' : 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-sky-500/30 text-sky-200 border border-sky-400/30';
+                    this.typewriteText(`「${step.text}」`);
+                } else if (step.type === 'monologue') {
+                    speakerBadge.textContent = '小明的內心';
+                    speakerBadge.className = 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-amber-500/30 text-amber-200 border border-amber-400/30';
+                    document.getElementById('monologue-text').textContent = step.text;
+                    monoOverlay.classList.remove('hidden'); monoOverlay.classList.add('flex');
+                    this.typewriteText(step.text);
+                } else if (step.type === 'nova') {
+                    novaBanner.classList.remove('hidden');
+                    document.getElementById('nova-banner-text').textContent = step.text;
+                    speakerBadge.textContent = 'NOVA 領航員提示';
+                    speakerBadge.className = 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-cyan-500/30 text-cyan-200 border border-cyan-400/30';
+                    this.typewriteText(step.text);
+                } else {
+                    speakerBadge.textContent = '旁白';
+                    speakerBadge.className = 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30';
+                    this.typewriteText(step.text);
+                }
+            },
+            appendPhoneMessage(step) {
+                const container = document.getElementById('phone-messages');
+                if (step.time) document.getElementById('phone-clock').textContent = step.time;
+                if (step.isSelf) SoundFX.playMessageOut(); else SoundFX.playMessageIn();
+                const wrapper = document.createElement('div');
+                wrapper.className = `flex flex-col ${step.isSelf ? 'items-end' : 'items-start'} msg-pop`;
+                const meta = document.createElement('span');
+                meta.className = 'text-[10px] text-slate-400 mb-0.5 px-1';
+                meta.textContent = `${step.sender} ${step.time ? '• ' + step.time : ''}`;
+                const bubble = document.createElement('div');
+                bubble.className = step.isSelf ? 'max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-xs bg-indigo-600 text-white text-xs sm:text-sm leading-relaxed shadow' : 'max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tl-xs bg-slate-800 border border-white/10 text-slate-100 text-xs sm:text-sm leading-relaxed shadow';
+                bubble.textContent = step.text;
+                wrapper.appendChild(meta); wrapper.appendChild(bubble);
+                container.appendChild(wrapper);
+                container.scrollTop = container.scrollHeight;
+            },
+            typewriteText(text) {
+                this.stopTyping();
+                this.currentFullText = text;
+                const el = document.getElementById('dialogue-text');
+                if (this.instantText) {
+                    el.textContent = text;
+                    this.isTyping = false;
+                    return;
+                }
+                this.isTyping = true;
+                el.textContent = '';
+                let idx = 0;
+                this.typingTimer = setInterval(() => {
+                    idx++;
+                    el.textContent = text.slice(0, idx);
+                    if (idx >= text.length) this.stopTyping();
+                }, 24);
+            },
+            stopTyping() {
+                if (this.typingTimer) { clearInterval(this.typingTimer); this.typingTimer = null; }
+                this.isTyping = false;
+            },
+            toggleInstantText() {
+                this.instantText = !this.instantText;
+                const icon = document.getElementById('icon-instant');
+                icon.className = this.instantText ? 'fa-solid fa-bolt text-amber-400' : 'fa-solid fa-forward-fast text-emerald-400';
+                if (this.instantText && this.isTyping) {
+                    this.stopTyping();
+                    document.getElementById('dialogue-text').textContent = this.currentFullText;
+                }
+            },
+            handleNextStep() {
+                if (this.isTyping) {
+                    this.stopTyping();
+                    document.getElementById('dialogue-text').textContent = this.currentFullText;
+                    return;
+                }
+                SoundFX.playClick();
+                const monoOverlay = document.getElementById('monologue-overlay');
+                if (!monoOverlay.classList.contains('hidden')) {
+                    monoOverlay.classList.add('hidden'); monoOverlay.classList.remove('flex');
+                }
+                if (this.stepIndex < this.stepQueue.length - 1) {
+                    this.stepIndex++;
+                    this.renderCurrentStep();
+                } else {
+                    this.advancePhase();
+                }
+            },
+            advancePhase() {
+                const u = this.currentUniverse;
+                if (this.phase === 'scene1') {
+                    this.presentChoiceModal(1);
+                } else if (this.phase === 'consequence1') {
+                    this.phase = 'scene2';
+                    SoundFX.playIncident();
+                    document.getElementById('scene-location-text').textContent = u.scene2Meta;
+                    const banner = document.getElementById('incident-banner');
+                    document.getElementById('incident-banner-text').textContent = u.scene2Title;
+                    banner.classList.remove('hidden'); banner.classList.add('flex');
+                    const branchIntro = u.scene2BranchIntro[this.choice1Selected];
+                    this.stepQueue = [branchIntro, ...u.scene2CommonSteps];
+                    this.stepIndex = 0;
+                    this.renderCurrentStep();
+                } else if (this.phase === 'scene2') {
+                    this.presentChoiceModal(2);
+                } else if (this.phase === 'ending') {
+                    this.showEndingScreen();
+                }
+            },
+            presentChoiceModal(stageNum) {
+                const u = this.currentUniverse;
+                const overlay = document.getElementById('choice-overlay');
+                document.getElementById('choice-stage-badge').textContent = stageNum === 1 ? `${u.code}｜第一次選擇` : `${u.code}｜第二次關鍵選擇`;
+                document.getElementById('choice-prompt-title').textContent = stageNum === 1 ? u.choice1Prompt : u.choice2Prompt;
+                const optionsObj = stageNum === 1 ? u.choice1Options : u.choice2Options;
+                const container = document.getElementById('choice-buttons-container');
+                container.innerHTML = ['A', 'B', 'C'].map(key => {
+                    const opt = optionsObj[key];
+                    return `
+                    <button onclick="GameApp.selectOption(${stageNum}, '${key}')" class="w-full text-left p-4 rounded-2xl glass-light hover:bg-indigo-600/30 hover:border-indigo-400 border border-white/15 transition group flex items-start gap-3.5">
+                        <span class="w-8 h-8 rounded-xl bg-indigo-500/30 border border-indigo-300/40 flex items-center justify-center font-black text-indigo-200 shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition">${key}</span>
+                        <div class="flex-1">
+                            <div class="font-bold text-white text-sm sm:text-base group-hover:text-sky-200 transition">${opt.label}</div>
+                            ${opt.replyText ? `<div class="text-xs text-slate-300 mt-1">小明：「${opt.replyText}」</div>` : ''}
+                        </div>
+                    </button>`;
+                }).join('');
+                overlay.classList.remove('hidden'); overlay.classList.add('flex');
+            },
+            selectOption(stageNum, key) {
+                SoundFX.playClick();
+                const u = this.currentUniverse;
+                document.getElementById('choice-overlay').classList.add('hidden');
+                document.getElementById('choice-overlay').classList.remove('flex');
+                if (stageNum === 1) {
+                    this.choice1Selected = key;
+                    this.phase = 'consequence1';
+                    this.stepQueue = [...u.choice1Options[key].consequenceSteps];
+                    this.stepIndex = 0;
+                    this.renderCurrentStep();
+                } else {
+                    this.choice2Selected = key;
+                    this.phase = 'ending';
+                    document.getElementById('incident-banner').classList.add('hidden');
+                    const endingOpt = u.choice2Options[key];
+                    this.stepQueue = endingOpt.steps(this.choice1Selected);
+                    this.stepIndex = 0;
+                    this.renderCurrentStep();
+                }
+            },
+            showEndingScreen() {
+                SoundFX.playUnlock();
+                const u = this.currentUniverse;
+                const c1Obj = u.choice1Options[this.choice1Selected];
+                const c2Obj = u.choice2Options[this.choice2Selected];
+                const code = c2Obj.endingCode;
+                const combo = `${this.choice1Selected}-${this.choice2Selected}`;
+                if (!this.saveData.unlockedEndings[code]) {
+                    this.saveData.unlockedEndings[code] = { unlockedAt: new Date().toISOString(), combinations: [combo] };
+                } else {
+                    const list = this.saveData.unlockedEndings[code].combinations || [];
+                    if (!list.includes(combo)) list.push(combo);
+                }
+                this.saveProgress();
+
+                document.getElementById('end-universe-title').textContent = `${u.code}｜${u.title}（${u.platform}）`;
+                document.getElementById('end-ending-name').textContent = c2Obj.endingName;
+                document.getElementById('end-choice1-text').textContent = c1Obj.label;
+                document.getElementById('end-choice2-text').textContent = c2Obj.label;
+                document.getElementById('end-final-monologue').textContent = c2Obj.finalMonologue;
+
+                const savedAnswers = (this.saveData.reflections && this.saveData.reflections[u.id]) || ['', '', ''];
+                const qContainer = document.getElementById('reflection-questions-list');
+                qContainer.innerHTML = u.reflections.map((q, idx) => `
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-2">
+                        <label class="block text-sm font-semibold text-slate-100">Q${idx + 1}. ${q}</label>
+                        <textarea id="reflection-input-${idx}" rows="2" oninput="GameApp.saveReflectionInput('${u.id}')" placeholder="在此輸入你的想法..." class="w-full rounded-xl bg-slate-950/90 border border-white/15 focus:border-sky-400 focus:outline-none p-3 text-sm text-white placeholder-slate-500 resize-y">${savedAnswers[idx] || ''}</textarea>
+                    </div>
+                `).join('');
+                this.showScreen('ending');
+            },
+            saveReflectionInput(universeId) {
+                const answers = [0, 1, 2].map(i => {
+                    const el = document.getElementById(`reflection-input-${i}`);
+                    return el ? el.value : '';
+                });
+                if (!this.saveData.reflections) this.saveData.reflections = {};
+                this.saveData.reflections[universeId] = answers;
+                this.saveProgress();
+            },
+            copyRecordCard() {
+                const u = this.currentUniverse;
+                if (!u) return;
+                const c1Obj = u.choice1Options[this.choice1Selected];
+                const c2Obj = u.choice2Options[this.choice2Selected];
+                const answers = (this.saveData.reflections && this.saveData.reflections[u.id]) || ['', '', ''];
+                const lines = [
+                    `【Friend.exe：小明的網路宇宙｜宇宙探索紀錄卡】`,
+                    `▸ 宇宙名稱：${u.code}｜${u.title}`,
+                    `▸ 第一次選擇：${c1Obj.label}`,
+                    `▸ 第二次選擇：${c2Obj.label}`,
+                    `▸ 達成結局：${c2Obj.endingName}`,
+                    `▸ 小明的最終獨白：${c2Obj.finalMonologue}`,
+                    ...u.reflections.map((q, idx) => `Q${idx + 1}：${q}\n我的想法：${answers[idx] || '（未填寫）'}`)
+                ];
+                const ta = document.createElement('textarea');
+                ta.value = lines.join('\n\n');
+                ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); this.showToast('宇宙紀錄卡已複製！'); } catch (err) { this.showToast('複製完成！'); }
+                document.body.removeChild(ta);
+            },
+            renderCodexGrid() {
+                const grid = document.getElementById('codex-grid');
+                grid.innerHTML = UNIVERSES_DATA.map(u => {
+                    const endingsHTML = ['A', 'B', 'C'].map(key => {
+                        const opt = u.choice2Options[key];
+                        const unlocked = this.saveData.unlockedEndings[opt.endingCode];
+                        return `
+                        <div class="p-3.5 rounded-2xl border ${unlocked ? 'bg-indigo-950/40 border-indigo-400/40' : 'bg-slate-900/50 border-white/5 opacity-60'} flex flex-col justify-between gap-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold ${unlocked ? 'text-white' : 'text-slate-400'}">${unlocked ? opt.endingName : `結局 ${opt.endingCode}（未解鎖）`}</span>
+                            </div>
+                            <p class="text-xs ${unlocked ? 'text-amber-200/90 italic' : 'text-slate-500'}">${unlocked ? opt.finalMonologue : '尚未解鎖此結局。'}</p>
+                        </div>`;
+                    }).join('');
+                    return `
+                    <div class="glass-panel rounded-3xl p-5 border border-white/10 space-y-3.5">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+                            <div><span class="text-xs font-bold mono-font" style="color:${u.accentColor}">${u.code}</span><h3 class="text-lg font-bold text-white">${u.title}</h3></div>
+                            <button onclick="GameApp.startUniverse('${u.id}')" class="px-3 py-1.5 rounded-xl glass-light hover:bg-white/15 text-xs font-semibold text-sky-300 transition">遊玩 <i class="fa-solid fa-play ml-1"></i></button>
+                        </div>
+                        <div class="space-y-2.5">${endingsHTML}</div>
+                    </div>`;
+                }).join('');
+            },
+            showModal(id) {
+                SoundFX.playClick();
+                const el = document.getElementById(`modal-${id}`);
+                if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+            },
+            hideModal(id) {
+                SoundFX.playClick();
+                const el = document.getElementById(`modal-${id}`);
+                if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+            },
+            showToast(msg) {
+                SoundFX.playUnlock();
+                const toast = document.getElementById('toast-notification');
+                document.getElementById('toast-text').textContent = msg;
+                toast.classList.remove('hidden'); toast.classList.add('flex');
+                setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 3200);
+            }
+        };
+
+        window.onload = function () { GameApp.init(); };
+    </script>
+</body>
+</html>
