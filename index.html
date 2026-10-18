@@ -129,17 +129,35 @@
             width: 100%;
             height: 100%;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             position: relative;
+            overflow: hidden;
         }
         .xm-portrait-img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            object-position: center bottom;
-            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+            object-fit: cover;
+            object-position: center 4%;
+            transform: scale(1.38);
+            transform-origin: top center;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
             display: block;
+        }
+        /* 針對遊戲主舞台的半身立繪放大與構圖微調 */
+        #vn-character-zone .xm-portrait-img {
+            object-fit: cover;
+            object-position: center 3%;
+            transform: scale(1.65);
+            transform-origin: 50% 6%;
+        }
+        @media (max-width: 1023px) {
+            #vn-character-zone .xm-portrait-img {
+                object-fit: cover;
+                object-position: center 2%;
+                transform: scale(1.75);
+                transform-origin: 50% 5%;
+            }
         }
         .xm-portrait-fallback {
             width: 100%;
@@ -298,116 +316,100 @@
 </head>
 <body class="relative select-none">
 
-    <!-- 頂部全域導覽列 -->
-    <header id="top-bar" class="fixed top-0 left-0 right-0 z-40 px-3 py-2.5 md:px-6 flex items-center justify-between pointer-events-none">
-        <div class="flex items-center gap-2 pointer-events-auto">
-            <button onclick="GameApp.confirmGoHome()" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-indigo-400/60 transition flex items-center gap-1.5">
+    <!-- 頂部全域導覽列（手機版不換行、不直排擠壓） -->
+    <header id="top-bar" class="fixed top-0 left-0 right-0 z-40 px-2 py-2 sm:px-6 flex items-center justify-between gap-1.5 pointer-events-none bg-gradient-to-b from-slate-950/90 via-slate-950/50 to-transparent">
+        <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto shrink-0">
+            <button onclick="GameApp.confirmGoHome()" class="glass-panel w-8 h-8 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-indigo-400/60 transition flex items-center justify-center gap-1.5 whitespace-nowrap" title="首頁">
                 <i class="fa-solid fa-house text-indigo-400"></i>
                 <span class="hidden sm:inline">首頁</span>
             </button>
-            <button id="btn-universe-hub" onclick="GameApp.confirmGoHub()" class="hidden glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-indigo-400/60 transition flex items-center gap-1.5">
+            <button id="btn-universe-hub" onclick="GameApp.confirmGoHub()" class="hidden glass-panel px-2.5 py-1.5 sm:px-3 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-indigo-400/60 transition flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fa-solid fa-compass text-sky-400"></i>
-                <span>宇宙選擇</span>
+                <span class="hidden xs:inline sm:inline">宇宙選擇</span>
+                <span class="inline sm:hidden">宇宙</span>
             </button>
-            <button id="btn-restart-universe" onclick="GameApp.restartCurrentUniverse()" class="hidden glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-amber-400/60 transition flex items-center gap-1.5">
+            <button id="btn-restart-universe" onclick="GameApp.restartCurrentUniverse()" class="hidden glass-panel w-8 h-8 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white hover:border-amber-400/60 transition flex items-center justify-center gap-1.5 whitespace-nowrap" title="重新開始">
                 <i class="fa-solid fa-rotate-right text-amber-400"></i>
                 <span class="hidden sm:inline">重新開始</span>
             </button>
         </div>
 
         <!-- 當前宇宙進度指示 -->
-        <div id="top-progress-pill" class="hidden glass-panel px-3.5 py-1.5 rounded-full items-center gap-3 pointer-events-auto max-w-[45vw] sm:max-w-xs">
-            <span id="current-universe-badge" class="text-xs font-bold tracking-wider truncate text-indigo-300">宇宙 01</span>
-            <div class="w-16 sm:w-24 h-1.5 bg-slate-700/80 rounded-full overflow-hidden">
+        <div id="top-progress-pill" class="hidden glass-panel px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full items-center gap-2 pointer-events-auto min-w-0 flex-1 max-w-[160px] sm:max-w-xs justify-center">
+            <span id="current-universe-badge" class="text-[11px] sm:text-xs font-bold tracking-wider truncate text-indigo-300">宇宙 01</span>
+            <div class="w-10 sm:w-20 h-1.5 bg-slate-700/80 rounded-full overflow-hidden shrink-0">
                 <div id="universe-progress-bar" class="h-full bg-gradient-to-r from-indigo-400 to-sky-400 transition-all duration-300" style="width: 10%"></div>
             </div>
         </div>
 
         <!-- 音效與打字速度控制 -->
-        <div class="flex items-center gap-2 pointer-events-auto">
-            <button onclick="GameApp.showModal('guide')" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white transition flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto shrink-0">
+            <button onclick="GameApp.showModal('guide')" class="glass-panel w-8 h-8 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-200 hover:text-white transition flex items-center justify-center gap-1.5 whitespace-nowrap" title="遊戲說明">
                 <i class="fa-solid fa-circle-info text-amber-400"></i>
                 <span class="hidden sm:inline">遊戲說明</span>
             </button>
-            <button onclick="GameApp.showScreen('codex')" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-purple-200 hover:text-white transition flex items-center gap-1.5">
+            <button onclick="GameApp.showScreen('codex')" class="glass-panel px-2.5 py-1.5 sm:px-3 rounded-full text-xs md:text-sm font-medium text-purple-200 hover:text-white transition flex items-center gap-1 whitespace-nowrap">
                 <i class="fa-solid fa-book-bookmark text-amber-300"></i>
-                <span>圖鑑(<span id="home-codex-count">0/21</span>)</span>
+                <span class="hidden sm:inline">圖鑑</span><span>(<span id="home-codex-count">0/21</span>)</span>
             </button>
-            <button id="btn-instant-text" onclick="GameApp.toggleInstantText()" class="glass-panel px-3 py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5" title="切換逐字顯示／立即顯示">
+            <button id="btn-instant-text" onclick="GameApp.toggleInstantText()" class="glass-panel w-8 h-8 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full text-xs md:text-sm font-medium text-slate-300 hover:text-white transition flex items-center justify-center gap-1.5" title="切換逐字顯示／立即顯示">
                 <i class="fa-solid fa-forward-fast text-emerald-400" id="icon-instant"></i>
             </button>
-            <button id="btn-mute" onclick="SoundFX.toggleMute()" class="glass-panel w-9 h-9 rounded-full flex items-center justify-center text-slate-200 hover:text-white transition" title="靜音開關">
-                <i id="icon-mute" class="fa-solid fa-volume-high text-indigo-300"></i>
+            <button id="btn-mute" onclick="SoundFX.toggleMute()" class="glass-panel w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-slate-200 hover:text-white transition shrink-0" title="靜音開關">
+                <i id="icon-mute" class="fa-solid fa-volume-high text-indigo-300 text-xs sm:text-sm"></i>
             </button>
         </div>
     </header>
 
     <!-- ==================== 1. 首頁畫面 (Home Screen：精簡聚焦於原圖下半部七道拱門宇宙舞台) ==================== -->
-    <main id="screen-home" class="relative w-full h-full flex flex-col justify-between items-center px-3 sm:px-6 pt-16 pb-4 overflow-y-auto overflow-x-hidden z-20 cosmic-bg portal-scene-bg">
+    <main id="screen-home" class="relative w-full h-full flex flex-col justify-between items-center px-3 sm:px-6 pt-14 pb-6 overflow-y-auto overflow-x-hidden z-20 cosmic-bg portal-scene-bg">
         <div class="absolute inset-0 cosmic-grid pointer-events-none"></div>
         <div class="energy-stream w-[75vw] top-[32%] -left-[10%]"></div>
         <div class="energy-stream w-[65vw] bottom-[22%] -right-[8%]" style="animation-delay: -4.5s;"></div>
 
-        <div class="relative z-10 w-full max-w-[1440px] mx-auto my-auto flex flex-col items-center justify-center gap-4 py-2">
+        <div class="relative z-10 w-full max-w-[1440px] mx-auto my-auto flex flex-col items-center justify-center gap-3 sm:gap-4 py-2">
             <!-- 標題區 -->
-            <div class="text-center space-y-1 mb-2">
+            <div class="text-center space-y-1 mb-1 sm:mb-2">
                 <div class="text-3xl sm:text-5xl font-black italic tracking-wider text-cyan-200 neon-script-title mono-font">
                     Friend.exe
                 </div>
                 <h1 class="text-2xl sm:text-4xl font-black tracking-wide text-white cyber-title-glow">
                     小明的網路宇宙
                 </h1>
-                <p class="text-xs sm:text-sm text-cyan-100/90 tracking-widest font-medium">
+                <p class="text-xs sm:text-sm text-cyan-100/90 tracking-widest font-medium px-2">
                     七個平行宇宙，七種相遇，七種可能的自己。交網友，就等於，交朋友嗎？
                 </p>
             </div>
 
             <!-- 七道拱門宇宙舞台容器 -->
-            <div class="relative w-full">
-                <!-- 七道尖拱形傳送門橫列 -->
-                <div id="home-arch-portals" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 items-end pt-2 pb-16">
+            <div class="relative w-full flex flex-col items-center">
+                <!-- 七道尖拱形傳送門橫列（手機版底部不與按鈕重疊） -->
+                <div id="home-arch-portals" class="w-full grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 items-stretch lg:items-end pt-2 pb-4 lg:pb-20">
                     <!-- 由 JS 動態渲染 01 ~ 07 尖拱形傳送門卡片 -->
                 </div>
 
-                <!-- 前景中央：背著黑色後背包的小明背影 ＋ 地面金色全息光環 ＋ 「✦ 選擇你的宇宙 ✦」按鈕 -->
-                <div class="absolute bottom-1 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-none">
+                <!-- 前景中央：電腦版懸浮於底部中央、手機版自然排列於拱門下方不擋住第 07 號卡片，且移除重複的簡化 SVG 背影避免擋住背景圖裡的小明 -->
+                <div class="relative lg:absolute lg:bottom-0 lg:left-1/2 lg:-translate-x-1/2 z-30 flex flex-col items-center mt-2 lg:mt-0 pointer-events-none w-full">
                     <!-- 地面發光全息魔法圓環 -->
-                    <div class="w-72 sm:w-96 h-14 sm:h-16 rounded-full floor-magic-ring absolute bottom-1 -z-10 animate-pulse"></div>
+                    <div class="w-64 sm:w-96 h-12 sm:h-16 rounded-full floor-magic-ring absolute -bottom-1 -z-10 animate-pulse"></div>
 
-                    <!-- 小明背影插畫 -->
-                    <div class="w-28 h-28 sm:w-32 sm:h-32 pointer-events-none drop-shadow-[0_10px_25px_rgba(0,0,0,0.85)] -mb-2">
-                        <svg viewBox="0 0 160 170" class="w-full h-full">
-                            <path d="M 54 48 C 48 22 65 10 80 10 C 98 10 112 22 106 48 C 103 55 96 60 80 60 C 64 60 57 55 54 48 Z" fill="#1e293b"/>
-                            <path d="M 50 38 L 45 45 L 54 46 M 110 38 L 115 45 L 106 46" fill="#1e293b"/>
-                            <ellipse cx="53" cy="45" rx="3.5" ry="6" fill="#fed7aa"/>
-                            <ellipse cx="107" cy="45" rx="3.5" ry="6" fill="#fed7aa"/>
-                            <path d="M 30 92 Q 80 72 130 92 L 140 168 L 20 168 Z" fill="#d6d3d1" stroke="#78716c" stroke-width="1.8"/>
-                            <path d="M 52 62 Q 80 54 108 62 C 114 78 102 95 80 95 C 58 95 46 78 52 62 Z" fill="#e7e5e4" stroke="#a8a29e" stroke-width="1.8"/>
-                            <path d="M 48 80 L 42 150 L 54 150 L 58 82 Z" fill="#1e293b"/>
-                            <path d="M 112 80 L 118 150 L 106 150 L 102 82 Z" fill="#1e293b"/>
-                            <rect x="47" y="92" width="66" height="72" rx="14" fill="#0f172a" stroke="#475569" stroke-width="2"/>
-                            <rect x="55" y="122" width="50" height="32" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
-                            <rect x="74" y="102" width="12" height="6" rx="2" fill="#94a3b8"/>
-                        </svg>
-                    </div>
-
-                    <!-- 「✦ 選擇你的宇宙 ✦」按鈕与快速開始 -->
-                    <div class="flex flex-wrap items-center justify-center gap-2.5 pointer-events-auto">
-                        <button onclick="GameApp.startQuickPlay()" class="neon-primary-btn px-6 py-3 rounded-full text-white font-black text-base sm:text-lg tracking-wider flex items-center gap-2">
+                    <!-- 「✦ 選擇你的宇宙 ✦」按鈕與快速開始 -->
+                    <div class="flex flex-wrap items-center justify-center gap-2.5 py-2 pointer-events-auto">
+                        <button onclick="GameApp.startQuickPlay()" class="neon-primary-btn px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-white font-black text-sm sm:text-lg tracking-wider flex items-center gap-2 whitespace-nowrap">
                             <i class="fa-solid fa-play text-xs"></i>
                             <span>開始遊戲</span>
                         </button>
-                        <button onclick="GameApp.showScreen('hub')" class="px-7 py-3 rounded-full bg-slate-900/95 hover:bg-indigo-950 text-white font-black text-base sm:text-lg tracking-widest border-2 border-amber-200/80 shadow-[0_0_25px_rgba(56,189,248,0.8),0_0_45px_rgba(251,191,36,0.4)] hover:scale-105 transition flex items-center gap-2.5">
-                            <span class="text-cyan-300 text-sm">✦</span>
+                        <button onclick="GameApp.showScreen('hub')" class="px-6 sm:px-7 py-2.5 sm:py-3 rounded-full bg-slate-900/95 hover:bg-indigo-950 text-white font-black text-sm sm:text-lg tracking-widest border-2 border-amber-200/80 shadow-[0_0_25px_rgba(56,189,248,0.8),0_0_45px_rgba(251,191,36,0.4)] hover:scale-105 transition flex items-center gap-2 whitespace-nowrap">
+                            <span class="text-cyan-300 text-xs sm:text-sm">✦</span>
                             <span>選擇你的宇宙</span>
-                            <span class="text-cyan-300 text-sm">✦</span>
+                            <span class="text-cyan-300 text-xs sm:text-sm">✦</span>
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- 右下角標語 -->
-            <div class="text-right w-full pr-2">
+            <div class="text-center sm:text-right w-full px-2 pt-1">
                 <p class="text-xs sm:text-sm font-bold text-amber-100 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
                     這一次，由你決定小明會遇見什麼樣的關係。
                 </p>
@@ -444,37 +446,41 @@
     </section>
 
     <!-- ==================== 3. 遊戲主舞台畫面 (Gameplay Stage) ==================== -->
-    <section id="screen-game" class="hidden w-full h-full flex-col justify-between vn-backdrop z-20">
+    <section id="screen-game" class="hidden w-full h-full flex-col justify-between vn-backdrop z-20 overflow-y-auto lg:overflow-hidden">
         <div id="stage-atmosphere" class="absolute inset-0 pointer-events-none z-0"></div>
 
-        <div id="incident-banner" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-30 px-5 py-2 rounded-full bg-rose-600/90 text-white font-bold text-xs sm:text-sm tracking-wider shadow-lg border border-rose-300/50 items-center gap-2 animate-bounce">
+        <div id="incident-banner" class="hidden fixed lg:absolute top-12 sm:top-14 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 rounded-full bg-rose-600/95 text-white font-bold text-xs sm:text-sm tracking-wider shadow-lg border border-rose-300/50 items-center gap-2 whitespace-nowrap animate-bounce">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span id="incident-banner-text">突發事件發生</span>
         </div>
 
-        <div class="relative z-10 flex-1 w-full max-w-6xl mx-auto px-3 sm:px-6 pt-14 pb-2 flex flex-col lg:flex-row items-center justify-center gap-4 min-h-0 overflow-hidden">
-            <div id="vn-character-zone" class="relative flex-1 w-full h-full flex flex-col items-center justify-end min-h-[160px] lg:min-h-[340px] pointer-events-none">
-                <div id="scene-location-pill" class="absolute top-1 left-1 sm:left-4 glass-panel px-3.5 py-1.5 rounded-xl text-xs text-slate-200 flex items-center gap-2 shadow-md">
-                    <i class="fa-regular fa-clock text-sky-400"></i>
-                    <span id="scene-location-text">晚上 22:45｜小明的房間</span>
+        <div class="relative z-10 flex-1 w-full max-w-6xl mx-auto px-2.5 sm:px-6 pt-12 sm:pt-14 pb-1 flex flex-col lg:flex-row items-center justify-between lg:justify-center gap-2 sm:gap-4 min-h-0">
+            <div id="vn-character-zone" class="relative w-full lg:flex-1 h-[175px] sm:h-[240px] lg:h-full flex flex-col items-center justify-end lg:min-h-[360px] pointer-events-none shrink-0">
+                <!-- 地點與狀態列：手機版置頂左/右且不遮擋角色臉部 -->
+                <div class="w-full flex items-center justify-between gap-1.5 mb-1 z-20 px-1 lg:px-0 lg:contents">
+                    <div id="scene-location-pill" class="lg:absolute lg:top-1 lg:left-4 glass-panel px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs text-slate-200 flex items-center gap-1.5 shadow-md max-w-[62%] lg:max-w-none truncate">
+                        <i class="fa-regular fa-clock text-sky-400 shrink-0"></i>
+                        <span id="scene-location-text" class="truncate">晚上 22:45｜小明的房間</span>
+                    </div>
+
+                    <!-- 關係狀態提示膠囊 -->
+                    <div id="relationship-status-pill" class="hidden lg:absolute lg:top-1 lg:right-4 glass-panel px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs text-emerald-300 border border-emerald-400/30 items-center gap-1.5 shadow-md max-w-[38%] lg:max-w-none truncate">
+                        <i class="fa-solid fa-wave-square shrink-0"></i>
+                        <span id="relationship-status-text" class="truncate"></span>
+                    </div>
                 </div>
 
-                <!-- 關係狀態提示膠囊 -->
-                <div id="relationship-status-pill" class="hidden absolute top-1 right-1 sm:right-4 glass-panel px-3.5 py-1.5 rounded-xl text-xs text-emerald-300 border border-emerald-400/30 items-center gap-1.5 shadow-md">
-                    <i class="fa-solid fa-Wave-square"></i>
-                    <span id="relationship-status-text"></span>
-                </div>
-
-                <div class="w-full max-w-xl flex items-end justify-center gap-2 sm:gap-8 h-full pt-8">
-                    <div id="sprite-xiaoming" class="w-36 h-44 sm:w-48 sm:h-56 md:w-56 md:h-64 transition-all duration-500 transform origin-bottom shrink-0"></div>
-                    <div id="sprite-partner" class="w-36 h-44 sm:w-48 sm:h-56 md:w-56 md:h-64 transition-all duration-500 transform origin-bottom hidden sm:block shrink-0"></div>
+                <!-- 角色立繪並列區：半身放大顯示，手機與電腦皆清晰呈現五官與上半身 -->
+                <div class="w-full max-w-2xl flex items-end justify-center gap-3 sm:gap-8 flex-1 min-h-0 overflow-hidden pt-1">
+                    <div id="sprite-xiaoming" class="w-36 h-[145px] sm:w-52 sm:h-[210px] lg:w-64 lg:h-[320px] transition-all duration-500 transform origin-bottom shrink-0"></div>
+                    <div id="sprite-partner" class="w-36 h-[145px] sm:w-52 sm:h-[210px] lg:w-64 lg:h-[320px] transition-all duration-500 transform origin-bottom shrink-0"></div>
                 </div>
             </div>
 
-            <div id="phone-simulator" class="w-full max-w-md lg:w-[390px] h-[250px] sm:h-[300px] lg:h-[430px] glass-panel rounded-3xl border border-white/20 flex flex-col overflow-hidden shadow-2xl shrink-0 transition-all duration-500">
-                <div id="phone-header" class="px-4 py-2.5 bg-slate-900/90 border-b border-white/10 flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div id="phone-avatar" class="w-8 h-8 rounded-full bg-indigo-500/30 border border-white/20 flex items-center justify-center text-sm font-bold">N</div>
+            <div id="phone-simulator" class="w-full max-w-md lg:w-[390px] h-[195px] sm:h-[260px] lg:h-[430px] glass-panel rounded-2xl sm:rounded-3xl border border-white/20 flex flex-col overflow-hidden shadow-2xl shrink-0 transition-all duration-500">
+                <div id="phone-header" class="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-slate-900/90 border-b border-white/10 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2">
+                        <div id="phone-avatar" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-500/30 border border-white/20 flex items-center justify-center text-xs sm:text-sm font-bold">N</div>
                         <div>
                             <div class="flex items-center gap-1.5">
                                 <span id="phone-contact-name" class="text-xs sm:text-sm font-bold text-white">NightWolf</span>
@@ -490,8 +496,8 @@
                     </div>
                 </div>
 
-                <div id="phone-messages" class="flex-1 p-3.5 overflow-y-auto space-y-2.5 bg-slate-950/50"></div>
-                <div id="phone-typing" class="hidden px-4 py-1.5 bg-slate-900/70 text-[11px] text-slate-400 flex items-center gap-2">
+                <div id="phone-messages" class="flex-1 p-3 sm:p-3.5 overflow-y-auto space-y-2 bg-slate-950/50"></div>
+                <div id="phone-typing" class="hidden px-4 py-1 bg-slate-900/70 text-[11px] text-slate-400 flex items-center gap-2 shrink-0">
                     <span class="flex gap-1">
                         <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
                         <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0.15s"></span>
@@ -502,26 +508,26 @@
             </div>
         </div>
 
-        <div class="relative z-20 w-full max-w-5xl mx-auto px-3 sm:px-6 pb-3 sm:pb-5">
-            <div id="nova-banner" class="hidden mb-2.5 glass-panel rounded-2xl p-3 sm:p-3.5 border-l-4 border-l-cyan-400 bg-cyan-950/40 flex items-start gap-3 shadow-lg">
-                <div class="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center shrink-0 text-cyan-300 mt-0.5">
-                    <i class="fa-solid fa-shield-halved"></i>
+        <div class="relative z-20 w-full max-w-5xl mx-auto px-2.5 sm:px-6 pb-2.5 sm:pb-5 shrink-0">
+            <div id="nova-banner" class="hidden mb-2 glass-panel rounded-2xl p-2.5 sm:p-3.5 border-l-4 border-l-cyan-400 bg-cyan-950/40 flex items-start gap-2.5 shadow-lg">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center shrink-0 text-cyan-300 mt-0.5">
+                    <i class="fa-solid fa-shield-halved text-xs sm:text-sm"></i>
                 </div>
                 <div class="flex-1 text-xs sm:text-sm">
-                    <div class="font-bold text-cyan-300 mono-font tracking-wider text-xs mb-0.5">NOVA 領航員提示</div>
+                    <div class="font-bold text-cyan-300 mono-font tracking-wider text-[11px] sm:text-xs mb-0.5">NOVA 領航員提示</div>
                     <p id="nova-banner-text" class="text-slate-100 leading-relaxed"></p>
                 </div>
             </div>
 
-            <div id="dialogue-box" onclick="GameApp.handleNextStep()" class="glass-panel rounded-3xl p-4 sm:p-6 cursor-pointer hover:border-white/30 transition relative min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
+            <div id="dialogue-box" onclick="GameApp.handleNextStep()" class="glass-panel rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 cursor-pointer hover:border-white/30 transition relative min-h-[105px] sm:min-h-[140px] flex flex-col justify-between">
                 <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span id="speaker-badge" class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">旁白</span>
+                    <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                        <span id="speaker-badge" class="inline-flex items-center gap-2 px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-full text-xs sm:text-sm font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">旁白</span>
                         <span id="step-counter" class="text-[11px] text-slate-400 mono-font">STEP 1</span>
                     </div>
-                    <p id="dialogue-text" class="text-base sm:text-lg md:text-xl text-slate-100 leading-relaxed font-normal tracking-wide"></p>
+                    <p id="dialogue-text" class="text-sm sm:text-lg md:text-xl text-slate-100 leading-relaxed font-normal tracking-wide"></p>
                 </div>
-                <div id="dialogue-next-hint" class="flex items-center justify-end gap-1.5 text-xs text-sky-300 font-medium mt-2">
+                <div id="dialogue-next-hint" class="flex items-center justify-end gap-1.5 text-xs text-sky-300 font-medium mt-1.5 sm:mt-2">
                     <span>點擊繼續</span>
                     <i class="fa-solid fa-caret-right next-indicator"></i>
                 </div>
@@ -1738,10 +1744,10 @@
                     { id: 'u6', num: '06', title: '十年的距離，三個月的靠近', pill: '現實 vs 網路', color: '#10b981', glow: 'rgba(16, 185, 129, 0.5)', icon: 'fa-user-group', partnerId: 'hao', tags: ['#友誼定義', '#關係品質', '#真實理解'] },
                     { id: 'u7', num: '07', title: '螢幕另一端的「朋友」', pill: 'AI 陪伴', color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.55)', icon: 'fa-robot', partnerId: 'lumi', tags: ['#AI陪伴', '#科技情感', '#資訊工具'] }
                 ];
-                container.innerHTML = archConfigs.map(cfg => `
+                container.innerHTML = archConfigs.map((cfg, idx) => `
                     <div onclick="GameApp.startUniverse('${cfg.id}')"
                          style="--arch-color:${cfg.color}; --arch-glow:${cfg.glow};"
-                         class="arch-portal cursor-pointer group p-3 pt-4 flex flex-col items-center justify-between text-center ${cfg.isCenter ? 'lg:-translate-y-3' : ''}">
+                         class="arch-portal cursor-pointer group p-3 pt-4 flex flex-col items-center justify-between text-center ${cfg.isCenter ? 'lg:-translate-y-3' : ''} ${idx === 6 ? 'col-span-2 max-w-[200px] mx-auto w-full sm:col-span-1 sm:max-w-none' : ''}">
                         <div class="space-y-1 z-10 w-full">
                             <div class="text-lg sm:text-xl font-black text-white drop-shadow mono-font">${cfg.num}</div>
                             <h3 class="text-xs sm:text-sm font-black text-white leading-tight line-clamp-2 min-h-[2.2rem] flex items-center justify-center">
